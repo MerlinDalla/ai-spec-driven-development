@@ -119,6 +119,12 @@
 - **DI-001**: System MUST [transaction requirement, e.g., "use database transactions for all account balance updates"]
 - **DI-002**: System MUST [precision requirement, e.g., "use decimal types for all currency calculations"]
 - **DI-003**: System MUST [validation requirement, e.g., "validate account balance before allowing withdrawals"]
+- **DI-004**: System MUST maintain an `audit_log` table containing at minimum: `operation_type`
+  (controlled enum), `operation_id` (UUID), `initiator` (authenticated identity), `timestamp`
+  (server-set TIMESTAMPTZ). The table MUST be append-only.
+- **DI-005**: Every state-changing operation MUST produce exactly one `audit_log` entry written
+  within the same ACID transaction. Operations that cannot write their audit entry MUST be
+  rolled back. Read-only operations (queries, health checks) are exempt.
 
 ### Performance Requirements
 

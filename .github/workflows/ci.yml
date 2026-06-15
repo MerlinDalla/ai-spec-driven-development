@@ -1,0 +1,69 @@
+﻿name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dev deps
+        run: pip install ruff
+      - name: Run ruff
+        run: ruff check src/
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: fund_transfer_test
+          POSTGRES_USER: fund_transfer
+          POSTGRES_PASSWORD: fund_transfer_pass
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -e ".[test]"
+      - name: Run unit tests
+        env:
+          DATABASE_URL: "postgresql+asyncpg://fund_transfer:fund_transfer_pass@localhost:5432/fund_transfer_test"
+          JWKS_URI: "https://test-idp.example.com/.well-known/jwks.json"
+          JWT_AUDIENCE: "fund-transfer-service"
+          EXCHANGE_RATES_CONFIG: "config/exchange_rates.yaml"
+          LOG_LEVEL: "DEBUG"
+          SERVICE_NAME: "fund-transfer-test"
+        run: |
+          pytest tests/unit/ -v --cov=src/fund_transfer --cov-report=term-missing --cov-fail-under=80
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install bandit
+        run: pip install bandit
+      - name: Run bandit
+        run: bandit -r src/fund_transfer/ -ll

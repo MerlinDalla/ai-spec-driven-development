@@ -9,7 +9,7 @@ description: "Task list template for feature implementation"
 
 **Prerequisites**: plan.md (required), spec.md (required for user stories), research.md, data-model.md, contracts/
 
-**Tests**: The examples below include test tasks. Tests are OPTIONAL - only include them if explicitly requested in the feature specification.
+**Tests**: Per Constitution Principle IV (Test-First Development), tests are MANDATORY for all banking functionality. Tests MUST be written before implementation and verified to FAIL before coding begins.
 
 **Organization**: Tasks are grouped by user story to enable independent implementation and testing of each story.
 
@@ -67,8 +67,13 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T005 [P] Implement authentication/authorization framework
 - [ ] T006 [P] Setup API routing and middleware structure
 - [ ] T007 Create base models/entities that all stories depend on
-- [ ] T008 Configure error handling and logging infrastructure
-- [ ] T009 Setup environment configuration management
+- [ ] T008 Create `audit_log` table migration with mandatory columns: `operation_id` (UUID PK),
+  `operation_type` (VARCHAR, controlled enum), `initiator` (TEXT NOT NULL), `timestamp`
+  (TIMESTAMPTZ server default); table MUST be append-only (block UPDATE/DELETE at DB level)
+- [ ] T009 Implement `AuditLog` ORM model and repository with INSERT-only write method;
+  define `OperationType` enum covering all state-changing operations in this feature
+- [ ] T010 Configure error handling and logging infrastructure
+- [ ] T011 Setup environment configuration management
 
 **Checkpoint**: Foundation ready - user story implementation can now begin in parallel
 
@@ -80,11 +85,11 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 1 (MANDATORY — TDD, write FIRST, verify FAIL before implementing)
 
-> **NOTE: Per Constitution Principle IV (Test-First Development), write these tests FIRST, ensure they FAIL before implementation**
-> 
-> **For Banking Features**: Financial calculations require >95% unit test coverage. All financial operations must have comprehensive test scenarios.
+> **Per Constitution Principle IV**: Tests MUST be written before implementation code and MUST fail
+> initially. Financial calculations require >95% unit test coverage.
+> All financial operations MUST have comprehensive test scenarios.
 
 - [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
@@ -109,7 +114,7 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 2 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 2 (MANDATORY — TDD, write FIRST, verify FAIL before implementing)
 
 - [ ] T018 [P] [US2] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T019 [P] [US2] Integration test for [user journey] in tests/integration/test_[name].py
@@ -131,7 +136,7 @@ Examples of foundational tasks (adjust based on your project):
 
 **Independent Test**: [How to verify this story works on its own]
 
-### Tests for User Story 3 (OPTIONAL - only if tests requested) ⚠️
+### Tests for User Story 3 (MANDATORY — TDD, write FIRST, verify FAIL before implementing)
 
 - [ ] T024 [P] [US3] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T025 [P] [US3] Integration test for [user journey] in tests/integration/test_[name].py

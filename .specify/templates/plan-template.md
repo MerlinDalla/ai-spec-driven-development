@@ -52,6 +52,11 @@
 - [ ] Decimal type usage confirmed for financial calculations
 - [ ] Audit trail requirements specified
 - [ ] Data validation strategy defined
+- [ ] `audit_log` table defined with mandatory columns: `operation_type`, `operation_id`, `initiator`, `timestamp`
+- [ ] `operation_type` controlled vocabulary (enum) documented before implementation
+- [ ] All state-changing operations mapped to an audit entry type
+- [ ] Audit writes confirmed to occur in same ACID transaction as triggering operation
+- [ ] Audit table append-only enforcement confirmed (no UPDATE/DELETE in application code)
 
 **API-Driven Design**:
 - [ ] API contract format chosen (OpenAPI/gRPC)

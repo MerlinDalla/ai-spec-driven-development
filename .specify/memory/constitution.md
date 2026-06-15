@@ -1,22 +1,22 @@
-<!--
+﻿<!--
 Sync Impact Report:
-- Version: 0.0.0 → 1.0.0 (Initial constitution for backend banking project)
-- Added Principles:
-  1. Security-First & Compliance
-  2. Data Integrity & Auditability
-  3. API-Driven Design
-  4. Test-First Development (NON-NEGOTIABLE)
-  5. Resilience & Error Handling
-  6. Performance & Scalability
-  7. Observability & Monitoring
-- Added Sections:
-  - Compliance & Regulatory Requirements
-  - Quality Gates & Review Process
-- Templates Status:
-  ✅ plan-template.md - Updated with banking-specific constitution checks
-  ✅ spec-template.md - Added security, compliance, and data integrity sections
-  ✅ tasks-template.md - Enhanced testing guidance for financial features
-- Follow-up TODOs: None
+- Version: 1.0.1 → 1.1.0 (MINOR — material expansion of Principle II with mandatory audit
+  table standard, universal action coverage rule, and controlled-vocabulary requirement)
+- Modified Principles:
+    II. Data Integrity & Auditability — expanded with new "Audit Table Standard" subsection
+- Added Sections: None (subsection added within existing principle)
+- Removed Sections: None
+- Templates Updated:
+  ✅ .specify/memory/constitution.md — Principle II expanded
+  ✅ .specify/templates/plan-template.md — DI audit-table checklist items added
+  ✅ .specify/templates/spec-template.md — DI-004 and DI-005 requirements added
+  ✅ .specify/templates/tasks-template.md — Audit log table task added to Phase 2
+- Follow-up TODOs:
+  ⚠ TODO(AUDIT_FIELD_NAMING): The existing Fund Transfer Service audit_log table uses
+    field names that differ from the canonical names mandated here:
+      canonical operation_id → current field name: id (UUID PK)
+      canonical initiator    → current field name: actor_identity
+    A migration and code refactor should align the existing schema to this standard.
 -->
 
 # AI Spec Driven Constitution
@@ -46,6 +46,42 @@ Financial data integrity is paramount:
 - Financial calculations MUST use precise decimal types (never floating point)
 - Data validation MUST occur at API boundaries and before persistence
 - Immutable audit logs MUST capture all financial operations
+
+#### Audit Table Standard (NON-NEGOTIABLE)
+
+Every system MUST maintain a dedicated `audit_log` table. This is not optional and cannot
+be deferred or replaced by application-level logging alone.
+
+**Mandatory minimum schema** — the table MUST contain at least these four columns:
+
+| Column | Type | Rules |
+|---|---|---|
+| `operation_type` | controlled enum/string | MUST be drawn from a pre-defined vocabulary; free-form strings are NOT permitted |
+| `operation_id` | UUID, globally unique | System-generated for each logged operation; used as the stable identifier for the audit entry |
+| `initiator` | string (non-empty) | MUST reference the authenticated identity that triggered the action (e.g., JWT `sub` claim); MUST be `system` for automated/background operations |
+| `timestamp` | TIMESTAMPTZ, server-set | MUST be set by the database server (not the application); immutable after insert |
+
+Additional columns (e.g., `affected_entities`, `amount`, `outcome`, `detail`, `request_id`)
+are permitted and encouraged but do not replace the four mandatory columns above.
+
+**Universal action coverage rule**: Every state-changing operation in the system — including
+but not limited to: record creation, update, deletion, fund transfer, status transition, and
+configuration change — MUST produce exactly one `audit_log` entry. Read-only operations
+(queries, health checks) are exempt.
+
+**Enforcement rules**:
+- Audit entries MUST be written in the same ACID transaction as the operation they record;
+  an operation that cannot write its audit entry MUST be rolled back entirely.
+- The audit table MUST be append-only: UPDATE and DELETE operations on `audit_log` are
+  forbidden in application code and MUST be blocked at the database level where possible.
+- `operation_type` values MUST be defined in a shared enum or controlled vocabulary document
+  before implementation; adding new values requires a documented schema change.
+- Audit entries MUST NOT expose secrets, plaintext PII beyond what is required for
+  traceability, or internal stack traces.
+
+**Rationale**: A mandatory, schema-enforced audit table with a controlled operation_type
+vocabulary ensures that audit coverage is complete, queryable, and consistent across all
+features. Ad-hoc logging cannot guarantee completeness or support regulatory queries.
 
 **Rationale**: Financial data errors can have severe consequences. Audit trails are required
 for regulatory compliance, fraud detection, and dispute resolution.
@@ -179,4 +215,4 @@ This constitution supersedes all other development practices and guidelines.
 - All exceptions MUST be documented with justification and risk assessment
 - Temporary exceptions MUST have remediation timeline
 
-**Version**: 1.0.0 | **Ratified**: 2026-06-15 | **Last Amended**: 2026-06-15
+**Version**: 1.1.0 | **Ratified**: 2026-06-15 | **Last Amended**: 2026-06-15
