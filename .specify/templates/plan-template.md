@@ -40,7 +40,53 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+**Security-First & Compliance**:
+- [ ] Authentication/authorization strategy defined
+- [ ] Sensitive data encryption approach specified
+- [ ] Audit logging requirements identified
+- [ ] Security scanning integration confirmed
+- [ ] Secrets management approach documented
+
+**Data Integrity & Auditability**:
+- [ ] ACID transaction boundaries identified
+- [ ] Decimal type usage confirmed for financial calculations
+- [ ] Audit trail requirements specified
+- [ ] Data validation strategy defined
+
+**API-Driven Design**:
+- [ ] API contract format chosen (OpenAPI/gRPC)
+- [ ] Versioning strategy defined
+- [ ] Backward compatibility approach specified
+- [ ] Request/response validation approach defined
+
+**Test-First Development**:
+- [ ] Test framework selected
+- [ ] TDD workflow confirmed
+- [ ] Coverage targets set (unit >95%, integration >80%)
+- [ ] Contract testing approach defined
+
+**Resilience & Error Handling**:
+- [ ] Timeout and retry strategies defined
+- [ ] Circuit breaker implementation planned
+- [ ] Error categorization approach specified
+- [ ] Idempotency guarantees identified
+
+**Performance & Scalability**:
+- [ ] Performance targets documented (<500ms read, <2s write)
+- [ ] Database optimization strategy defined
+- [ ] Load testing approach specified
+- [ ] Resource monitoring plan confirmed
+
+**Observability & Monitoring**:
+- [ ] Logging strategy defined (structured JSON)
+- [ ] Metrics collection approach specified
+- [ ] Distributed tracing integration planned
+- [ ] Alert definitions documented
+
+**Compliance**:
+- [ ] Applicable regulations identified (PCI-DSS, GDPR, SOC 2, AML/KYC)
+- [ ] Data classification completed
+- [ ] Privacy impact assessment planned (if processing PII)
 
 ## Project Structure
 

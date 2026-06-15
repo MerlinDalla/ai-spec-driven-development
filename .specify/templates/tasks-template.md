@@ -82,10 +82,13 @@ Examples of foundational tasks (adjust based on your project):
 
 ### Tests for User Story 1 (OPTIONAL - only if tests requested) ⚠️
 
-> **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
+> **NOTE: Per Constitution Principle IV (Test-First Development), write these tests FIRST, ensure they FAIL before implementation**
+> 
+> **For Banking Features**: Financial calculations require >95% unit test coverage. All financial operations must have comprehensive test scenarios.
 
 - [ ] T010 [P] [US1] Contract test for [endpoint] in tests/contract/test_[name].py
 - [ ] T011 [P] [US1] Integration test for [user journey] in tests/integration/test_[name].py
+- [ ] T012 [P] [US1] Unit tests for [financial calculation/critical logic] in tests/unit/test_[name].py (if applicable)
 
 ### Implementation for User Story 1
 

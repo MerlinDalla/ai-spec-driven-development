@@ -98,6 +98,38 @@
 - **FR-006**: System MUST authenticate users via [NEEDS CLARIFICATION: auth method not specified - email/password, SSO, OAuth?]
 - **FR-007**: System MUST retain user data for [NEEDS CLARIFICATION: retention period not specified]
 
+### Security & Compliance Requirements *(mandatory for banking systems)*
+
+<!--
+  ACTION REQUIRED: Specify security and compliance requirements based on the constitution.
+  All banking features must address these areas.
+-->
+
+- **SEC-001**: System MUST [authentication/authorization requirement, e.g., "authenticate all API requests with JWT tokens"]
+- **SEC-002**: System MUST [data protection requirement, e.g., "encrypt sensitive data at rest using AES-256"]
+- **SEC-003**: System MUST [audit requirement, e.g., "log all financial transactions with user ID, timestamp, and action"]
+- **SEC-004**: System MUST [compliance requirement, e.g., "comply with PCI-DSS for payment card processing"]
+
+### Data Integrity Requirements *(mandatory for financial features)*
+
+<!--
+  ACTION REQUIRED: Specify data integrity requirements if the feature handles financial data.
+-->
+
+- **DI-001**: System MUST [transaction requirement, e.g., "use database transactions for all account balance updates"]
+- **DI-002**: System MUST [precision requirement, e.g., "use decimal types for all currency calculations"]
+- **DI-003**: System MUST [validation requirement, e.g., "validate account balance before allowing withdrawals"]
+
+### Performance Requirements
+
+<!--
+  ACTION REQUIRED: Specify performance targets based on constitution standards.
+-->
+
+- **PERF-001**: API read operations MUST complete in <500ms (p95)
+- **PERF-002**: API write operations MUST complete in <2s (p95)
+- **PERF-003**: System MUST [throughput requirement, e.g., "handle 1000 transactions per second"]
+
 ### Key Entities *(include if feature involves data)*
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
