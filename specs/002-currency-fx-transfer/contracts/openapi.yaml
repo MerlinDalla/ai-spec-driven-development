@@ -1,0 +1,482 @@
+openapi: 3.1.0
+info:
+  title: FX Conversion & Cross-Currency Transfer API
+  version: 1.0.0
+  description: |
+    Extension to the Fund Transfer Service API adding live exchange rate retrieval,
+    currency conversion preview, enhanced cross-currency transfer support (split fees,
+    state lifecycle), and in-app notifications.
+
+    **Fee model**: Transfers incur a *sending fee* (charged to sender on top of source amount)
+    and a *receiving fee* (deducted from the converted amount before crediting the recipient).
+
+    **Rate staleness**: If exchange rates are older than the configured maximum age,
+    transfer initiation is blocked. Rate viewing remains available.
+
+    **Transfer lifecycle**: `PENDING → PROCESSING → COMPLETED / FAILED`
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development
+  - url: https://api.bank.internal/fund-transfer/api/v1
+    description: Production
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: FX Rates
+    description: Exchange rate table and conversion preview
+  - name: Transfers
+    description: Cross-currency transfer operations (extends existing Transfers API)
+  - name: Notifications
+    description: In-app notification retrieval and read acknowledgement
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Money:
+      type: string
+      pattern: '^\d+(\.\d{1,8})?$'
+      description: Decimal monetary amount as a string (up to 8 decimal places for rates, 4 for amounts)
+      example: "1500.0000"
+
+    CurrencyCode:
+      type: string
+      minLength: 3
+      maxLength: 3
+      pattern: '^[A-Z]{3}$'
+      description: ISO 4217 currency code
+      example: EUR
+
+    TransferStatus:
+      type: string
+      enum: [pending, processing, completed, failed, rejected]
+      description: |
+        Transfer lifecycle state:
+        - `pending`: record created, rate locked
+        - `processing`: debit/credit in progress
+        - `completed`: both sides committed
+        - `failed`: rolled back, no funds moved
+        - `rejected`: legacy value (equivalent to failed)
+
+    ExchangeRate:
+      type: object
+      required: [from_currency, to_currency, buy_rate, sell_rate]
+      properties:
+        from_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        to_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        buy_rate:
+          $ref: '#/components/schemas/Money'
+          description: Rate at which the bank buys the from_currency (customer sells)
+        sell_rate:
+          $ref: '#/components/schemas/Money'
+          description: Rate at which the bank sells the from_currency (customer buys)
+
+    RateTableResponse:
+      type: object
+      required: [rates, effective_at, is_stale, snapshot_id]
+      properties:
+        snapshot_id:
+          type: string
+          format: uuid
+          description: ID of the FxRateSnapshot used
+        effective_at:
+          type: string
+          format: date-time
+          description: When these rates became effective
+        is_stale:
+          type: boolean
+          description: True if rates exceed the configured maximum age
+        rates:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExchangeRate'
+
+    ConversionPreviewRequest:
+      type: object
+      required: [from_currency, to_currency, amount]
+      properties:
+        from_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        to_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        amount:
+          $ref: '#/components/schemas/Money'
+          description: Amount in from_currency to convert
+
+    ConversionPreviewResponse:
+      type: object
+      required: [from_currency, to_currency, input_amount, exchange_rate, gross_converted_amount,
+                 estimated_sending_fee, estimated_receiving_fee, estimated_net_amount, snapshot_id, effective_at, is_stale]
+      properties:
+        from_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        to_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        input_amount:
+          $ref: '#/components/schemas/Money'
+        exchange_rate:
+          $ref: '#/components/schemas/Money'
+        gross_converted_amount:
+          $ref: '#/components/schemas/Money'
+          description: Converted amount before receiving fee
+        estimated_sending_fee:
+          $ref: '#/components/schemas/Money'
+          description: Estimated fee charged to sender (in from_currency)
+        estimated_receiving_fee:
+          $ref: '#/components/schemas/Money'
+          description: Estimated fee deducted from recipient credit (in to_currency)
+        estimated_net_amount:
+          $ref: '#/components/schemas/Money'
+          description: Net amount the recipient will receive after receiving fee
+        total_sender_cost:
+          $ref: '#/components/schemas/Money'
+          description: input_amount + sending_fee (total deducted from sender)
+        snapshot_id:
+          type: string
+          format: uuid
+        effective_at:
+          type: string
+          format: date-time
+        is_stale:
+          type: boolean
+
+    CrossCurrencyTransferRequest:
+      type: object
+      required: [source_account_number, destination_account_number, source_amount, source_currency,
+                 destination_currency, fx_snapshot_id]
+      properties:
+        source_account_number:
+          type: string
+          description: Account to debit
+        destination_account_number:
+          type: string
+          description: Account to credit
+        source_amount:
+          $ref: '#/components/schemas/Money'
+          description: Amount to transfer in source currency (before sending fee)
+        source_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        destination_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        fx_snapshot_id:
+          type: string
+          format: uuid
+          description: |
+            Snapshot ID from the conversion preview. Rate is re-validated at confirmation;
+            if deviation exceeds threshold a 409 is returned.
+        idempotency_key:
+          type: string
+          maxLength: 255
+          description: Caller-supplied idempotency key (required)
+
+    CrossCurrencyTransferResponse:
+      type: object
+      required: [id, status, source_account_number, destination_account_number,
+                 source_amount, source_currency, sending_fee, gross_converted_amount,
+                 receiving_fee, net_credited_amount, destination_currency,
+                 exchange_rate, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/TransferStatus'
+        source_account_number:
+          type: string
+        destination_account_number:
+          type: string
+        source_amount:
+          $ref: '#/components/schemas/Money'
+        source_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        sending_fee:
+          $ref: '#/components/schemas/Money'
+        gross_converted_amount:
+          $ref: '#/components/schemas/Money'
+        receiving_fee:
+          $ref: '#/components/schemas/Money'
+        net_credited_amount:
+          $ref: '#/components/schemas/Money'
+        destination_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        exchange_rate:
+          $ref: '#/components/schemas/Money'
+        failure_reason:
+          type: string
+          nullable: true
+        fx_snapshot_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationResponse:
+      type: object
+      required: [id, recipient_account_number, transfer_id, direction,
+                 source_amount, source_currency, net_credited_amount,
+                 net_credited_currency, read_at, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        recipient_account_number:
+          type: string
+        transfer_id:
+          type: string
+          format: uuid
+        direction:
+          type: string
+          enum: [sent, received]
+        source_amount:
+          $ref: '#/components/schemas/Money'
+        source_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        net_credited_amount:
+          $ref: '#/components/schemas/Money'
+        net_credited_currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required: [error_code, message]
+      properties:
+        error_code:
+          type: string
+        message:
+          type: string
+        detail:
+          type: object
+          nullable: true
+
+paths:
+  /fx/rates:
+    get:
+      tags: [FX Rates]
+      summary: Get exchange rate table
+      description: |
+        Returns all configured currency pairs with current buy/sell rates and snapshot metadata.
+        If rates are stale, `is_stale: true` is returned; transfer initiation will be blocked
+        but rate viewing remains available.
+      operationId: getFxRates
+      responses:
+        '200':
+          description: Exchange rate table retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateTableResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /fx/convert:
+    post:
+      tags: [FX Rates]
+      summary: Preview currency conversion
+      description: |
+        Calculates the estimated converted amount including sending fee, receiving fee,
+        and net amount to be credited to the recipient. Uses the current (latest non-stale)
+        rate snapshot. Returns the snapshot_id to be supplied when confirming a transfer.
+      operationId: previewConversion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversionPreviewRequest'
+      responses:
+        '200':
+          description: Conversion preview calculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConversionPreviewResponse'
+        '400':
+          description: Invalid currency or amount
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unsupported currency pair
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Exchange rates are stale — conversion preview unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /transfers/cross-currency:
+    post:
+      tags: [Transfers]
+      summary: Initiate a cross-currency transfer
+      description: |
+        Creates a cross-currency transfer with PENDING status, re-validates the rate from
+        the supplied snapshot, applies split fees, executes the atomic debit/credit
+        (pessimistic lock), and returns the final transfer record.
+
+        **Rate deviation**: If the current rate deviates from the snapshot rate by more than
+        the configured threshold (default 1%), a 409 is returned with the updated rate.
+        The client must call `POST /fx/convert` again and resubmit with the new snapshot_id.
+
+        **Idempotency**: The `X-Idempotency-Key` header is required. Duplicate submissions
+        with the same key return the original response without re-executing.
+      operationId: createCrossCurrencyTransfer
+      parameters:
+        - name: X-Idempotency-Key
+          in: header
+          required: true
+          schema:
+            type: string
+            maxLength: 255
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrossCurrencyTransferRequest'
+      responses:
+        '201':
+          description: Transfer completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrossCurrencyTransferResponse'
+        '200':
+          description: Idempotent replay — original transfer returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrossCurrencyTransferResponse'
+        '409':
+          description: Rate deviation exceeded threshold — resubmit with updated snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: RATE_DEVIATION
+                message: "Exchange rate changed by 1.5% since preview. Please review the updated rate and resubmit."
+                detail:
+                  preview_rate: "1.07500000"
+                  current_rate: "1.09113000"
+                  deviation_pct: "1.5"
+                  new_snapshot_id: "<uuid>"
+        '422':
+          description: Insufficient funds, unsupported currency pair, or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Exchange rates stale — transfer initiation blocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /transfers/{transfer_id}/status:
+    get:
+      tags: [Transfers]
+      summary: Get transfer status
+      description: Returns the current status and details of any transfer by ID.
+      operationId: getTransferStatus
+      parameters:
+        - name: transfer_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Transfer status returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrossCurrencyTransferResponse'
+        '404':
+          description: Transfer not found
+        '403':
+          description: Caller not authorized to view this transfer
+
+  /notifications:
+    get:
+      tags: [Notifications]
+      summary: List in-app notifications for the caller's accounts
+      description: |
+        Returns all notifications for accounts owned by the authenticated caller.
+        Use `unread_only=true` to filter to unread notifications.
+      operationId: listNotifications
+      parameters:
+        - name: account_number
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Account number to retrieve notifications for
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Notifications list returned
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NotificationResponse'
+        '403':
+          description: Caller does not own the specified account
+
+  /notifications/{notification_id}/read:
+    patch:
+      tags: [Notifications]
+      summary: Mark a notification as read
+      description: Sets read_at to the current server timestamp for the specified notification.
+      operationId: markNotificationRead
+      parameters:
+        - name: notification_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Notification marked as read
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponse'
+        '404':
+          description: Notification not found
+        '403':
+          description: Caller does not own this notification
