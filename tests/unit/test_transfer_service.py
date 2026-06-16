@@ -1,15 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from fund_transfer.core.exceptions import (
-    InsufficientFundsError,
-    LimitExceededError,
-    ValidationError,
-)
+from fund_transfer.core.exceptions import InsufficientFundsError, LimitExceededError, ValidationError
 from fund_transfer.models.account import Account, AccountStatus
 from fund_transfer.models.transfer import Transfer, TransferStatus
 from fund_transfer.schemas.transfer import CreateTransferRequest
@@ -40,7 +36,7 @@ def make_mock_transfer(src="ACCT-SRC000000001", dst="ACCT-DST000000002"):
     t.destination_currency = "EUR"
     t.exchange_rate = Decimal("1.00000000")
     t.status = TransferStatus.completed.value
-    t.rejection_reason = None
+    t.failure_reason = None
     t.created_at = MagicMock()
     t.created_at.isoformat.return_value = "2026-06-15T10:00:00+00:00"
     return t
@@ -61,10 +57,7 @@ async def test_valid_same_currency_transfer(exchange_rate_config):
     execute_result_dst = MagicMock()
     execute_result_dst.scalar_one_or_none.return_value = dst_account
 
-    mock_session.execute = AsyncMock(side_effect=[
-        execute_result_src,
-        execute_result_dst,
-    ])
+    mock_session.execute = AsyncMock(side_effect=[execute_result_src, execute_result_dst])
 
     mock_transfer = make_mock_transfer()
     with patch("fund_transfer.services.transfer_service.TransferRepository") as MockRepo:
@@ -103,8 +96,8 @@ async def test_zero_amount_raises_validation_error(exchange_rate_config):
                 request=CreateTransferRequest(
                     source_account_number="ACCT-SRC000000001",
                     destination_account_number="ACCT-DST000000002",
-                    amount=Decimal("0.0000"),
-                ),
+                    amount=Decimal("0.0001"),
+                ).model_copy(update={"amount": Decimal("0.0000")}),
                 caller_id="user-123",
                 idempotency_key="key-002",
                 request_hash="hash-002",

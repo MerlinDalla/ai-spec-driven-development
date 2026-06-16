@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from decimal import Decimal
 from typing import Annotated
@@ -15,13 +15,9 @@ class CreateTransferRequest(BaseModel):
     def validate_not_self_transfer(self) -> "CreateTransferRequest":
         if self.source_account_number == self.destination_account_number:
             raise ValueError("Source and destination accounts must be different.")
-        return self
-
-    @classmethod
-    def validate_amount(cls, v: Decimal) -> Decimal:
-        if v <= Decimal("0"):
+        if self.amount <= Decimal("0"):
             raise ValueError("Transfer amount must be greater than zero.")
-        return v
+        return self
 
 
 class TransferResponse(BaseModel):
@@ -34,11 +30,12 @@ class TransferResponse(BaseModel):
     destination_currency: str
     exchange_rate: str
     status: str
-    rejection_reason: str | None = None
+    failure_reason: str | None = None
     created_at: str
 
     @classmethod
     def from_orm_transfer(cls, transfer) -> "TransferResponse":
+        failure_reason = getattr(transfer, "failure_reason", getattr(transfer, "rejection_reason", None))
         return cls(
             transfer_id=str(transfer.id),
             source_account_number=transfer.source_account_number,
@@ -49,6 +46,6 @@ class TransferResponse(BaseModel):
             destination_currency=transfer.destination_currency,
             exchange_rate=f"{transfer.exchange_rate:.8f}",
             status=transfer.status,
-            rejection_reason=transfer.rejection_reason,
+            failure_reason=failure_reason,
             created_at=transfer.created_at.isoformat() if transfer.created_at else "",
         )

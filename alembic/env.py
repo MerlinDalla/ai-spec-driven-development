@@ -1,22 +1,26 @@
 import asyncio
+import os
+import sys
 from logging.config import fileConfig
+
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-from alembic import context
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Import models so Alembic can see them
-import os, sys
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from fund_transfer.models.account import Account  # noqa
-from fund_transfer.models.audit_log import AuditLogEntry  # noqa
-from fund_transfer.models.transfer import Transfer  # noqa
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 from fund_transfer.core.database import Base
+from fund_transfer.models.account import Account  # noqa: F401
+from fund_transfer.models.audit_log import AuditLogEntry  # noqa: F401
+from fund_transfer.models.currency_pair import CurrencyPair  # noqa: F401
+from fund_transfer.models.fx_rate_snapshot import FxRateSnapshot  # noqa: F401
+from fund_transfer.models.notification import Notification  # noqa: F401
+from fund_transfer.models.transfer import Transfer  # noqa: F401
 
 target_metadata = Base.metadata
 
@@ -41,10 +45,7 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_async_migrations() -> None:
     configuration = config.get_section(config.config_ini_section, {})
-    configuration["sqlalchemy.url"] = os.getenv(
-        "DATABASE_URL",
-        config.get_main_option("sqlalchemy.url", ""),
-    )
+    configuration["sqlalchemy.url"] = os.getenv("DATABASE_URL", config.get_main_option("sqlalchemy.url", ""))
     connectable = async_engine_from_config(
         configuration,
         prefix="sqlalchemy.",
