@@ -1,0 +1,38 @@
+schema_version: "1.0"
+
+preset:
+  # CUSTOMIZE: Change 'my-preset' to your preset ID (lowercase, hyphen-separated)
+  id: "my-preset"
+
+  # CUSTOMIZE: Human-readable name for your preset
+  name: "My Preset"
+
+  # CUSTOMIZE: Update version when releasing (semantic versioning: X.Y.Z)
+  version: "1.0.0"
+
+  # CUSTOMIZE: Brief description (under 200 characters)
+  description: "Add additional concerns"
+
+  # CUSTOMIZE: Your name or organization name
+  author: "RBAL"
+
+  # CUSTOMIZE: GitHub repository URL (create before publishing)
+  repository: "https://github.com/your-org/spec-kit-preset-my-preset"
+
+  # REVIEW: License (MIT is recommended for open source)
+  license: "MIT"
+
+# Requirements for this preset
+requires:
+  # CUSTOMIZE: Minimum spec-kit version required
+  speckit_version: ">=0.9.0"
+
+# Templates provided by this preset
+provides:
+  templates:
+    - type: "command"
+      name: "speckit.specify"
+      file: "commands/speckit-specify-addendum.md"
+      description: "Prepare UI mock"
+      strategy: "append"
+      # In the wrapper file, use {CORE_TEMPLATE} where the original content goes

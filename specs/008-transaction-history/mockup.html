@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transaction History — Raiffeisen Bank</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --rbi-red: #FFCC00;
+      --rbi-dark: #1A1A1A;
+    }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #F4F4F4; }
+    .rbi-red { color: #CC0000; }
+    .bg-rbi-red { background-color: #CC0000; }
+    .border-rbi-red { border-color: #CC0000; }
+    .hover-rbi-red:hover { background-color: #A80000; }
+    .rbi-yellow { color: #FFCC00; }
+    .bg-rbi-yellow { background-color: #FFCC00; }
+    input[type="date"]::-webkit-calendar-picker-indicator { cursor: pointer; }
+    .tag { display: inline-flex; align-items: center; gap: 4px; background: #FFEEEE; color: #CC0000; border: 1px solid #FFCCCC; border-radius: 999px; padding: 2px 10px; font-size: 12px; font-weight: 500; }
+    .tag button { background: none; border: none; cursor: pointer; color: #CC0000; font-size: 14px; line-height: 1; padding: 0; }
+    tr:hover td { background: #FFF8F8; }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+
+  <!-- Top Navigation Bar -->
+  <header class="bg-rbi-red shadow-md">
+    <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <!-- Raiffeisen Logo (SVG gable/cross symbol) -->
+        <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="4" fill="#FFCC00"/>
+          <path d="M20 6 L34 20 L20 34 L6 20 Z" fill="#CC0000"/>
+          <path d="M20 12 L28 20 L20 28 L12 20 Z" fill="#FFCC00"/>
+        </svg>
+        <span class="text-white font-bold text-xl tracking-wide">Raiffeisen Bank</span>
+      </div>
+      <nav class="hidden md:flex gap-6 text-white text-sm font-medium">
+        <a href="#" class="opacity-70 hover:opacity-100 transition">Dashboard</a>
+        <a href="#" class="opacity-100 border-b-2 border-white pb-0.5">Transactions</a>
+        <a href="#" class="opacity-70 hover:opacity-100 transition">Transfers</a>
+        <a href="#" class="opacity-70 hover:opacity-100 transition">Cards</a>
+        <a href="#" class="opacity-70 hover:opacity-100 transition">Settings</a>
+      </nav>
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-rbi-red font-bold text-sm">JD</div>
+        <span class="text-white text-sm hidden md:block">John Doe</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Page Content -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Page Title -->
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-800">Transaction History</h1>
+      <p class="text-gray-500 text-sm mt-1">Account: AT61 1904 3002 3457 3201 — Main Current Account</p>
+    </div>
+
+    <!-- Filter Panel -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5 mb-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="font-semibold text-gray-700 text-sm uppercase tracking-wide">Search &amp; Filters</h2>
+        <button onclick="clearAllFilters()" class="text-xs text-rbi-red hover:underline font-medium">Clear all</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Name search -->
+        <div class="md:col-span-1">
+          <label class="block text-xs font-medium text-gray-500 mb-1">Creditor name</label>
+          <div class="relative">
+            <svg class="absolute left-3 top-2.5 w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z"/>
+            </svg>
+            <input id="filter-name" type="text" placeholder="e.g. Telekom, Müller..." oninput="applyFilters()"
+              class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+          </div>
+        </div>
+        <!-- Date from -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Date from</label>
+          <input id="filter-date-from" type="date" onchange="applyFilters()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+        </div>
+        <!-- Date to -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Date to</label>
+          <input id="filter-date-to" type="date" onchange="applyFilters()"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+        </div>
+        <!-- Amount range -->
+        <div>
+          <label class="block text-xs font-medium text-gray-500 mb-1">Amount range (EUR)</label>
+          <div class="flex gap-2">
+            <input id="filter-amount-min" type="number" min="0" placeholder="Min" oninput="applyFilters()"
+              class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+            <input id="filter-amount-max" type="number" min="0" placeholder="Max" oninput="applyFilters()"
+              class="w-1/2 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent" />
+          </div>
+        </div>
+      </div>
+      <!-- Validation error -->
+      <div id="filter-error" class="hidden mt-3 text-xs text-red-600 font-medium flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+        <span id="filter-error-msg"></span>
+      </div>
+      <!-- Active filter tags -->
+      <div id="active-tags" class="mt-3 flex flex-wrap gap-2 hidden"></div>
+    </div>
+
+    <!-- Results Summary + Table -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+      <!-- Table Header Bar -->
+      <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div>
+          <span class="font-semibold text-gray-800 text-sm" id="results-count">Loading…</span>
+          <span class="text-gray-400 text-sm ml-1">transactions found</span>
+        </div>
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
+          <span>Date descending</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-100">
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Creditor Name</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">IBAN</th>
+              <th class="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Amount</th>
+              <th class="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Currency</th>
+            </tr>
+          </thead>
+          <tbody id="transaction-tbody">
+            <!-- Rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty state -->
+      <div id="empty-state" class="hidden py-16 flex flex-col items-center text-center">
+        <svg class="w-14 h-14 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+        </svg>
+        <p class="text-gray-500 font-medium">No transactions found</p>
+        <p class="text-gray-400 text-sm mt-1">Try adjusting your search filters.</p>
+      </div>
+
+      <!-- Pagination -->
+      <div id="pagination-bar" class="px-5 py-4 border-t border-gray-100 flex items-center justify-between">
+        <span class="text-sm text-gray-500" id="page-info"></span>
+        <div class="flex items-center gap-1" id="page-controls"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // ── Sample Data (48 transactions) ──────────────────────────────────────────
+    const ALL_TRANSACTIONS = generateTransactions(48);
+
+    function generateTransactions(count) {
+      const creditors = [
+        { name: 'A1 Telekom Austria AG', iban: 'AT12345678901234' },
+        { name: 'Wien Energie GmbH', iban: 'AT98765432109876' },
+        { name: 'BILLA AG', iban: 'AT11223344556677' },
+        { name: 'Erste Bank der oesterreichischen Sparkassen AG', iban: 'AT55443322116655' },
+        { name: 'Wiener Linien GmbH & Co KG', iban: 'AT77889900112233' },
+        { name: 'Amazon EU SARL', iban: 'AT99001122334455' },
+        { name: 'Netflix International BV', iban: 'AT22334455667788' },
+        { name: 'Spotify AB', iban: 'AT44556677889900' },
+        { name: 'Müller Drogerie GmbH', iban: 'AT66778899001122' },
+        { name: 'Spar Österreich Warenhandels-AG', iban: 'AT88990011223344' },
+        { name: 'Dr. Max Pharmacy', iban: 'AT10203040506070' },
+        { name: 'OMV AG', iban: 'AT70605040302010' },
+      ];
+      const currencies = ['EUR', 'EUR', 'EUR', 'EUR', 'USD', 'CHF'];
+      const amounts = [12.99, 89.50, 234.00, 1450.00, 67.30, 9.99, 1200.00, 45.80, 320.00, 18.50, 55.00, 799.00, 24.99, 140.00, 500.00];
+      const today = new Date();
+      const txns = [];
+      for (let i = 0; i < count; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i * 4);
+        const c = creditors[i % creditors.length];
+        txns.push({
+          id: i + 1,
+          date: d.toISOString().slice(0, 10),
+          creditorName: c.name,
+          creditorIban: maskIban(c.iban),
+          amount: amounts[i % amounts.length],
+          currency: currencies[i % currencies.length],
+        });
+      }
+      return txns;
+    }
+
+    function maskIban(iban) {
+      return '****' + iban.slice(-4);
+    }
+
+    // ── State ──────────────────────────────────────────────────────────────────
+    const PAGE_SIZE = 20;
+    let currentPage = 1;
+    let filteredData = [...ALL_TRANSACTIONS];
+
+    // ── Filter Logic ───────────────────────────────────────────────────────────
+    function applyFilters() {
+      const name = document.getElementById('filter-name').value.trim().toLowerCase();
+      const dateFrom = document.getElementById('filter-date-from').value;
+      const dateTo = document.getElementById('filter-date-to').value;
+      const amtMin = parseFloat(document.getElementById('filter-amount-min').value);
+      const amtMax = parseFloat(document.getElementById('filter-amount-max').value);
+
+      const errEl = document.getElementById('filter-error');
+      const errMsg = document.getElementById('filter-error-msg');
+      errEl.classList.add('hidden');
+
+      // Validation
+      if (dateFrom && dateTo && dateFrom > dateTo) {
+        errMsg.textContent = '"Date from" must not be later than "Date to".';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (!isNaN(amtMin) && amtMin < 0) {
+        errMsg.textContent = 'Minimum amount cannot be negative.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+      if (!isNaN(amtMax) && amtMax < 0) {
+        errMsg.textContent = 'Maximum amount cannot be negative.';
+        errEl.classList.remove('hidden');
+        return;
+      }
+
+      filteredData = ALL_TRANSACTIONS.filter(tx => {
+        if (name && !tx.creditorName.toLowerCase().includes(name)) return false;
+        if (dateFrom && tx.date < dateFrom) return false;
+        if (dateTo && tx.date > dateTo) return false;
+        if (!isNaN(amtMin) && tx.amount < amtMin) return false;
+        if (!isNaN(amtMax) && tx.amount > amtMax) return false;
+        return true;
+      });
+
+      currentPage = 1;
+      renderTags(name, dateFrom, dateTo, amtMin, amtMax);
+      renderTable();
+    }
+
+    function clearAllFilters() {
+      document.getElementById('filter-name').value = '';
+      document.getElementById('filter-date-from').value = '';
+      document.getElementById('filter-date-to').value = '';
+      document.getElementById('filter-amount-min').value = '';
+      document.getElementById('filter-amount-max').value = '';
+      document.getElementById('filter-error').classList.add('hidden');
+      applyFilters();
+    }
+
+    // ── Active filter tags ─────────────────────────────────────────────────────
+    function renderTags(name, dateFrom, dateTo, amtMin, amtMax) {
+      const container = document.getElementById('active-tags');
+      container.innerHTML = '';
+      const tags = [];
+      if (name) tags.push({ label: `Name: "${name}"`, clear: () => { document.getElementById('filter-name').value = ''; applyFilters(); } });
+      if (dateFrom) tags.push({ label: `From: ${dateFrom}`, clear: () => { document.getElementById('filter-date-from').value = ''; applyFilters(); } });
+      if (dateTo) tags.push({ label: `To: ${dateTo}`, clear: () => { document.getElementById('filter-date-to').value = ''; applyFilters(); } });
+      if (!isNaN(amtMin) && document.getElementById('filter-amount-min').value) tags.push({ label: `Min: ${amtMin}`, clear: () => { document.getElementById('filter-amount-min').value = ''; applyFilters(); } });
+      if (!isNaN(amtMax) && document.getElementById('filter-amount-max').value) tags.push({ label: `Max: ${amtMax}`, clear: () => { document.getElementById('filter-amount-max').value = ''; applyFilters(); } });
+
+      if (tags.length === 0) { container.classList.add('hidden'); return; }
+      container.classList.remove('hidden');
+      tags.forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag';
+        span.innerHTML = `${t.label} <button onclick="">✕</button>`;
+        span.querySelector('button').addEventListener('click', t.clear);
+        container.appendChild(span);
+      });
+    }
+
+    // ── Table Render ───────────────────────────────────────────────────────────
+    function renderTable() {
+      const tbody = document.getElementById('transaction-tbody');
+      const emptyState = document.getElementById('empty-state');
+      const paginationBar = document.getElementById('pagination-bar');
+      const resultsCount = document.getElementById('results-count');
+
+      const total = filteredData.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      currentPage = Math.min(currentPage, totalPages);
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const pageData = filteredData.slice(start, start + PAGE_SIZE);
+
+      resultsCount.textContent = total;
+
+      if (total === 0) {
+        tbody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        paginationBar.classList.add('hidden');
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      paginationBar.classList.remove('hidden');
+
+      tbody.innerHTML = pageData.map(tx => `
+        <tr class="border-b border-gray-50 cursor-pointer transition-colors">
+          <td class="px-5 py-3.5 text-gray-600 whitespace-nowrap">${formatDate(tx.date)}</td>
+          <td class="px-5 py-3.5 font-medium text-gray-800">${tx.creditorName}</td>
+          <td class="px-5 py-3.5 text-gray-500 font-mono text-xs">${tx.creditorIban}</td>
+          <td class="px-5 py-3.5 text-right font-semibold text-gray-800 whitespace-nowrap">${formatAmount(tx.amount, tx.currency)}</td>
+          <td class="px-5 py-3.5 text-gray-500">${tx.currency}</td>
+        </tr>
+      `).join('');
+
+      renderPagination(currentPage, totalPages, total);
+    }
+
+    function formatDate(iso) {
+      const [y, m, d] = iso.split('-');
+      return `${d}.${m}.${y}`;
+    }
+
+    function formatAmount(amount, currency) {
+      return new Intl.NumberFormat('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount);
+    }
+
+    // ── Pagination ─────────────────────────────────────────────────────────────
+    function renderPagination(page, totalPages, total) {
+      const info = document.getElementById('page-info');
+      const controls = document.getElementById('page-controls');
+      const start = (page - 1) * PAGE_SIZE + 1;
+      const end = Math.min(page * PAGE_SIZE, total);
+      info.textContent = `Showing ${start}–${end} of ${total}`;
+
+      controls.innerHTML = '';
+      const btn = (label, disabled, onclick, active = false) => {
+        const b = document.createElement('button');
+        b.innerHTML = label;
+        b.disabled = disabled;
+        b.onclick = onclick;
+        b.className = [
+          'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+          disabled ? 'text-gray-300 cursor-not-allowed' : '',
+          active ? 'bg-rbi-red text-white' : (!disabled ? 'text-gray-600 hover:bg-gray-100' : ''),
+        ].join(' ');
+        return b;
+      };
+
+      // Prev
+      controls.appendChild(btn('← Prev', page <= 1, () => { currentPage--; renderTable(); }));
+
+      // Page numbers (windowed)
+      const pages = getPageWindow(page, totalPages);
+      let lastP = 0;
+      pages.forEach(p => {
+        if (p - lastP > 1) {
+          const dots = document.createElement('span');
+          dots.textContent = '…';
+          dots.className = 'px-2 text-gray-400 text-sm';
+          controls.appendChild(dots);
+        }
+        controls.appendChild(btn(p, false, () => { currentPage = p; renderTable(); }, p === page));
+        lastP = p;
+      });
+
+      // Next
+      controls.appendChild(btn('Next →', page >= totalPages, () => { currentPage++; renderTable(); }));
+    }
+
+    function getPageWindow(current, total) {
+      const delta = 1;
+      const pages = new Set([1, total]);
+      for (let i = Math.max(2, current - delta); i <= Math.min(total - 1, current + delta); i++) pages.add(i);
+      return [...pages].sort((a, b) => a - b);
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────────
+    applyFilters();
+  </script>
+</body>
+</html>
