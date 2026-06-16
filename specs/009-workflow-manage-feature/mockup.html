@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workflow Orchestration — Raiffeisen Bank Spec Kit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      --rbi-red: #CC0000;
+      --rbi-yellow: #FFCC00;
+    }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #F4F4F4; }
+    .rbi-red { color: var(--rbi-red); }
+    .bg-rbi-red { background-color: var(--rbi-red); }
+    .border-rbi-red { border-color: var(--rbi-red); }
+    .hover-rbi-red:hover { background-color: #A80000; }
+    .rbi-yellow { color: var(--rbi-yellow); }
+    .bg-rbi-yellow { background-color: var(--rbi-yellow); }
+    .step-completed { background: #E8F5E9; border-left: 4px solid #4CAF50; }
+    .step-running { background: #E3F2FD; border-left: 4px solid #2196F3; animation: pulse 2s infinite; }
+    .step-pending { background: #F5F5F5; border-left: 4px solid #999; }
+    .step-failed { background: #FFEBEE; border-left: 4px solid var(--rbi-red); }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .badge-success { background: #E8F5E9; color: #2E7D32; }
+    .badge-running { background: #E3F2FD; color: #1565C0; }
+    .badge-pending { background: #F5F5F5; color: #666; }
+    .badge-error { background: #FFEBEE; color: var(--rbi-red); }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-100">
+
+  <!-- Header -->
+  <header class="bg-rbi-red shadow-md">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <svg width="32" height="32" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="40" height="40" rx="4" fill="#FFCC00"/>
+          <path d="M20 6 L34 20 L20 34 L6 20 Z" fill="var(--rbi-red)"/>
+        </svg>
+        <span class="text-white font-bold text-lg">Spec Kit Workflow Engine</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="text-white text-sm px-4 py-2 rounded hover:bg-opacity-80 transition">Help</button>
+        <div class="w-8 h-8 rounded-full bg-white flex items-center justify-center text-rbi-red font-bold text-sm">A</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8">
+
+    <!-- Page Title & Actions -->
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">Workflow Execution Dashboard</h1>
+          <p class="text-gray-500 text-sm mt-2">Manage automated feature development workflows</p>
+        </div>
+        <div class="flex gap-2">
+          <button class="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition">View History</button>
+          <button class="px-4 py-2 bg-rbi-red text-white rounded-lg text-sm font-medium hover-rbi-red transition">+ New Workflow</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Workflow Execution -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-6">
+      <div class="flex items-center justify-between mb-6">
+        <div>
+          <h2 class="text-lg font-semibold text-gray-800">Current Execution: Feature 008 Transaction History</h2>
+          <p class="text-sm text-gray-500">Workflow ID: <code class="text-xs bg-gray-100 px-2 py-1 rounded">wf-2026-06-16-001</code></p>
+        </div>
+        <div class="flex gap-2">
+          <span class="badge badge-running">🔄 RUNNING</span>
+          <span class="text-sm text-gray-600">Elapsed: <strong>1m 23s</strong></span>
+        </div>
+      </div>
+
+      <!-- Progress Bar -->
+      <div class="mb-6">
+        <div class="text-xs text-gray-600 mb-2">Overall Progress: Step 2 of 4</div>
+        <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="bg-rbi-red h-2 rounded-full" style="width: 50%;"></div>
+        </div>
+      </div>
+
+      <!-- Steps Timeline -->
+      <div class="space-y-4">
+        
+        <!-- Step 1: Spec -->
+        <div class="step-completed p-4 rounded-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-4">
+              <div class="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center text-white text-sm font-bold">✓</div>
+              <div>
+                <h3 class="font-semibold text-gray-800">Step 1: Specification (speckit-specify)</h3>
+                <p class="text-sm text-gray-600 mt-1">Create comprehensive feature specification with requirements and success criteria.</p>
+                <div class="mt-2 text-xs text-gray-500">
+                  <span class="inline-block mr-4">Duration: 12.3s</span>
+                  <span class="inline-block">Completed: 2026-06-16 14:22:15 UTC</span>
+                </div>
+              </div>
+            </div>
+            <button class="text-xs text-gray-600 hover:text-rbi-red">View Output</button>
+          </div>
+        </div>
+
+        <!-- Step 2: Plan (Running) -->
+        <div class="step-running p-4 rounded-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-4">
+              <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-sm font-bold">→</div>
+              <div>
+                <h3 class="font-semibold text-gray-800">Step 2: Implementation Planning (speckit-plan)</h3>
+                <p class="text-sm text-gray-600 mt-1">Generate architecture evidence, design artifacts, and implementation roadmap.</p>
+                <div class="mt-3 flex items-center gap-2">
+                  <svg class="w-4 h-4 text-blue-500 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                  </svg>
+                  <span class="text-xs text-blue-600 font-medium">Running... Research phase in progress</span>
+                </div>
+              </div>
+            </div>
+            <button class="text-xs text-gray-600 hover:text-rbi-red">View Logs</button>
+          </div>
+        </div>
+
+        <!-- Step 3: Tasks -->
+        <div class="step-pending p-4 rounded-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-4">
+              <div class="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-sm font-bold">3</div>
+              <div>
+                <h3 class="font-semibold text-gray-800">Step 3: Task Generation (speckit-tasks)</h3>
+                <p class="text-sm text-gray-600 mt-1">Generate dependency-ordered implementation tasks with acceptance criteria.</p>
+                <div class="mt-2 text-xs text-gray-500">Waiting for previous step to complete...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Implement -->
+        <div class="step-pending p-4 rounded-lg">
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-4">
+              <div class="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center text-white text-sm font-bold">4</div>
+              <div>
+                <h3 class="font-semibold text-gray-800">Step 4: Implementation (speckit-implement)</h3>
+                <p class="text-sm text-gray-600 mt-1">Execute tasks, manage code changes, and coordinate deployment.</p>
+                <div class="mt-2 text-xs text-gray-500">Pending...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="mt-6 flex gap-2 border-t border-gray-200 pt-4">
+        <button class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition">Pause</button>
+        <button class="px-4 py-2 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200 transition">Cancel & Rollback</button>
+        <button class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 transition ml-auto">View Full Logs</button>
+      </div>
+    </div>
+
+    <!-- Recent Workflows Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Workflow Card 1: Success -->
+      <div class="bg-white rounded-lg shadow border border-green-200 p-4">
+        <div class="flex items-start justify-between mb-3">
+          <h3 class="font-semibold text-gray-800 text-sm">Feature 007 — Recurring Transfer</h3>
+          <span class="badge badge-success">✓ SUCCESS</span>
+        </div>
+        <p class="text-xs text-gray-600 mb-3">Workflow completed in 3m 14s</p>
+        <div class="space-y-1 text-xs text-gray-600 mb-3">
+          <div>✓ Spec: 12.3s</div>
+          <div>✓ Plan: 1m 42s</div>
+          <div>✓ Tasks: 48s</div>
+          <div>✓ Implement: 31s</div>
+        </div>
+        <button class="w-full px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded transition">View Results</button>
+      </div>
+
+      <!-- Workflow Card 2: Failed -->
+      <div class="bg-white rounded-lg shadow border border-red-200 p-4">
+        <div class="flex items-start justify-between mb-3">
+          <h3 class="font-semibold text-gray-800 text-sm">Feature 006 — Catalog List</h3>
+          <span class="badge badge-error">✗ FAILED</span>
+        </div>
+        <p class="text-xs text-gray-600 mb-3">Failed at: Planning phase</p>
+        <div class="space-y-1 text-xs text-red-600 mb-3">
+          <div>Error: Architecture governance validation failed</div>
+          <div>Missing S-ADR for data state machine</div>
+        </div>
+        <button class="w-full px-3 py-2 text-xs font-medium text-red-700 hover:bg-red-50 rounded transition">Retry Workflow</button>
+      </div>
+
+      <!-- Workflow Card 3: Scheduled -->
+      <div class="bg-white rounded-lg shadow border border-blue-200 p-4">
+        <div class="flex items-start justify-between mb-3">
+          <h3 class="font-semibold text-gray-800 text-sm">Weekly Code Review</h3>
+          <span class="badge badge-pending">📅 SCHEDULED</span>
+        </div>
+        <p class="text-xs text-gray-600 mb-3">Next run: Friday 09:00 UTC</p>
+        <div class="space-y-1 text-xs text-gray-600 mb-3">
+          <div>Pattern: Weekly (Friday)</div>
+          <div>Last run: 2026-06-09 OK</div>
+          <div>Created: 2026-06-01</div>
+        </div>
+        <button class="w-full px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 rounded transition">Manage Schedule</button>
+      </div>
+
+    </div>
+
+    <!-- Execution History Table -->
+    <div class="bg-white rounded-xl shadow-md border border-gray-200 mt-6">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h3 class="font-semibold text-gray-800">Execution History</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="bg-gray-50 border-b border-gray-200">
+              <th class="text-left px-6 py-3 font-semibold text-gray-700">Workflow ID</th>
+              <th class="text-left px-6 py-3 font-semibold text-gray-700">Feature</th>
+              <th class="text-left px-6 py-3 font-semibold text-gray-700">Triggered By</th>
+              <th class="text-left px-6 py-3 font-semibold text-gray-700">Started</th>
+              <th class="text-left px-6 py-3 font-semibold text-gray-700">Duration</th>
+              <th class="text-left px-6 py-3 font-semibold text-gray-700">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="px-6 py-3 text-gray-600"><code class="text-xs bg-gray-100 px-2 py-1 rounded">wf-2026-06-16-001</code></td>
+              <td class="px-6 py-3 text-gray-800 font-medium">Feature 008</td>
+              <td class="px-6 py-3 text-gray-600">alice@bank.com</td>
+              <td class="px-6 py-3 text-gray-600">2026-06-16 14:22:03</td>
+              <td class="px-6 py-3 text-gray-600">1m 45s (running)</td>
+              <td class="px-6 py-3"><span class="badge badge-running">🔄 RUNNING</span></td>
+            </tr>
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="px-6 py-3 text-gray-600"><code class="text-xs bg-gray-100 px-2 py-1 rounded">wf-2026-06-15-042</code></td>
+              <td class="px-6 py-3 text-gray-800 font-medium">Feature 007</td>
+              <td class="px-6 py-3 text-gray-600">bob@bank.com</td>
+              <td class="px-6 py-3 text-gray-600">2026-06-15 10:15:22</td>
+              <td class="px-6 py-3 text-gray-600">3m 14s</td>
+              <td class="px-6 py-3"><span class="badge badge-success">✓ SUCCESS</span></td>
+            </tr>
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="px-6 py-3 text-gray-600"><code class="text-xs bg-gray-100 px-2 py-1 rounded">wf-2026-06-14-019</code></td>
+              <td class="px-6 py-3 text-gray-800 font-medium">Feature 006</td>
+              <td class="px-6 py-3 text-gray-600">alice@bank.com</td>
+              <td class="px-6 py-3 text-gray-600">2026-06-14 16:45:11</td>
+              <td class="px-6 py-3 text-gray-600">1m 22s</td>
+              <td class="px-6 py-3"><span class="badge badge-error">✗ FAILED</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+
+</body>
+</html>
