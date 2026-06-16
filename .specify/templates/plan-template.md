@@ -88,6 +88,15 @@
 - [ ] Distributed tracing integration planned
 - [ ] Alert definitions documented
 
+**Secure Architecture Governance**:
+- [ ] Trust boundaries identified and documented
+- [ ] STRIDE threat model initiated for critical paths
+- [ ] S-ADR created for each architecturally significant security decision
+- [ ] Zero Trust applicability evaluated (for distributed/cloud/remote systems)
+- [ ] Supply-chain: dependencies from verified registries, lock files committed
+- [ ] Secrets management uses platform secret store (no secrets in code/config)
+- [ ] Evidence directory `docs/security/` planned
+
 **Compliance**:
 - [ ] Applicable regulations identified (PCI-DSS, GDPR, SOC 2, AML/KYC)
 - [ ] Data classification completed

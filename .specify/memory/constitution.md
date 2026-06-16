@@ -1,22 +1,29 @@
 ﻿<!--
 Sync Impact Report:
-- Version: 1.0.1 → 1.1.0 (MINOR — material expansion of Principle II with mandatory audit
-  table standard, universal action coverage rule, and controlled-vocabulary requirement)
-- Modified Principles:
-    II. Data Integrity & Auditability — expanded with new "Audit Table Standard" subsection
-- Added Sections: None (subsection added within existing principle)
+- Version: 1.1.0 → 1.2.0 (MINOR — new Principle VIII added: Secure Architecture Governance,
+  sourced from the architecture-governance preset constitution-addendum)
+- Modified Principles: None (existing principles unchanged)
+- Added Sections:
+    VIII. Secure Architecture Governance — architectural security principles, STRIDE/CAPEC
+    threat modeling, arc42/S-ADR documentation standards, Zero Trust & OWASP SAMM,
+    memory-safe language guidance, and evidence location conventions
 - Removed Sections: None
 - Templates Updated:
-  ✅ .specify/memory/constitution.md — Principle II expanded
-  ✅ .specify/templates/plan-template.md — DI audit-table checklist items added
-  ✅ .specify/templates/spec-template.md — DI-004 and DI-005 requirements added
-  ✅ .specify/templates/tasks-template.md — Audit log table task added to Phase 2
-- Follow-up TODOs:
+  ✅ .specify/memory/constitution.md — Principle VIII added (this file)
+  ✅ .specify/templates/plan-template.md — Constitution Check expanded with
+     "Secure Architecture Governance" gate items
+  ⚠ .specify/templates/spec-template.md — No structural change required;
+     spec-addendum from preset injects architecture items per-spec at plan time
+  ⚠ .specify/templates/tasks-template.md — No structural change required;
+     tasks-addendum from preset injects S-ADR and threat-model tasks at task-gen time
+- Carried-forward TODOs:
   ⚠ TODO(AUDIT_FIELD_NAMING): The existing Fund Transfer Service audit_log table uses
     field names that differ from the canonical names mandated here:
       canonical operation_id → current field name: id (UUID PK)
       canonical initiator    → current field name: actor_identity
     A migration and code refactor should align the existing schema to this standard.
+- Evidence directory: docs/security/ (S-ADRs → docs/security/adr/) — to be created
+  when first security artifact is produced.
 -->
 
 # AI Spec Driven Constitution
@@ -151,6 +158,83 @@ All systems MUST be observable in production:
 **Rationale**: Banking systems require 24/7 availability. Observability enables rapid
 incident detection, root cause analysis, and proactive issue prevention.
 
+### VIII. Secure Architecture Governance
+
+Secure code without secure architecture is not sufficient. AI-generated and
+human-written architecture MUST follow these principles together:
+
+#### Architectural Security Principles
+
+- **Trust boundaries**: Define explicit trust boundaries; validate and sanitise
+  every input crossing one.
+- **Defense in depth**: At least two independent security layers MUST protect
+  every critical asset.
+- **Least privilege**: Every component, service, and process MUST operate with
+  the minimum permissions it requires.
+- **Fail-safe defaults**: Deny by default, grant explicitly; error paths MUST
+  fall back into a safe state.
+- **Attack surface reduction**: Unused endpoints, services, and debug features
+  MUST be disabled or removed before release.
+- **Separation of concerns**: Authentication, authorisation, logging, and input
+  validation MUST be implemented as cross-cutting concerns — never scattered
+  ad hoc across features.
+- **Secure configuration**: Secrets MUST be stored in platform-appropriate
+  secret stores (e.g., Azure Key Vault, AWS Secrets Manager). They MUST NOT
+  appear in source code or Git-tracked configuration files.
+- **Supply-chain security**: Dependencies MUST come from verified registries;
+  lock files MUST be committed; known-vulnerable dependencies MUST be replaced
+  before release.
+
+#### Threat Modeling and Risk
+
+- Threat modeling MUST use `STRIDE` (Spoofing, Tampering, Repudiation,
+  Information Disclosure, Denial of Service, Elevation of Privilege) as the
+  base framework.
+- Threats MUST be mapped against the `CIA` triad (Confidentiality, Integrity,
+  Availability) for impact classification.
+- For the highest-risk attack paths, relevant `CAPEC` patterns MUST be
+  referenced.
+- Each identified threat MUST have an explicit mitigation, an accepted-risk
+  rationale, or a deferral with a defined re-evaluation trigger.
+
+#### Architecture Documentation
+
+- Architecturally significant security decisions MUST be captured as
+  `Security Architecture Decision Records` (S-ADRs) using `adr-template`.
+- Each feature or service SHOULD maintain an `arc42` Section 8 security
+  cross-cutting concepts document (using `arc42-security-template`), covering:
+  authentication, authorisation, encryption in transit and at rest, input
+  validation, error handling, logging, dependencies, and deployment security.
+- Long-lived projects SHOULD record security quality attribute scenarios using
+  the `iSAQB CPSA-F` quality scenario method (`security-quality-scenarios-template`).
+
+#### Zero Trust and OWASP SAMM
+
+- `Zero Trust` (NIST SP 800-207) applicability MUST be explicitly evaluated
+  for distributed, service-based, cloud-near, or remotely managed systems.
+- Long-lived projects and workspaces SHOULD use `OWASP SAMM` to inform
+  improvement plans across Governance, Design, Implementation, Verification,
+  and Operations.
+
+#### Memory-Safe Language Consideration
+
+- When platform or runtime choices are involved, memory-safe language (MSL)
+  feasibility MUST be treated as an architectural constraint. Any non-MSL
+  architectural choice MUST be recorded with its rationale in an S-ADR.
+
+#### Evidence Locations
+
+- Architecture security evidence defaults to `docs/security/`.
+- S-ADRs default to `docs/security/adr/` — one file per decision.
+- Threat models, arc42 security concepts, Zero Trust assessments, OWASP SAMM
+  assessments, and security quality scenarios live in `docs/security/`.
+
+**Rationale**: Banking systems are high-value targets. Code-level security
+controls are necessary but insufficient without a governed architectural
+security posture. Explicit trust boundaries, documented threat models, and
+S-ADRs ensure security decisions are intentional, traceable, and reviewable
+— not emergent or accidental.
+
 ## Compliance & Regulatory Requirements
 
 All features MUST comply with applicable regulations:
@@ -215,4 +299,4 @@ This constitution supersedes all other development practices and guidelines.
 - All exceptions MUST be documented with justification and risk assessment
 - Temporary exceptions MUST have remediation timeline
 
-**Version**: 1.1.0 | **Ratified**: 2026-06-15 | **Last Amended**: 2026-06-15
+**Version**: 1.2.0 | **Ratified**: 2026-06-15 | **Last Amended**: 2026-06-16
