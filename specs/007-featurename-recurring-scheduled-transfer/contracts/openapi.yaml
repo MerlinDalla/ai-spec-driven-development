@@ -1,0 +1,556 @@
+openapi: "3.1.0"
+info:
+  title: Recurring Scheduled Transfer API
+  version: "1.0.0"
+  description: |
+    REST API for managing recurring, scheduled fund transfers.
+    All endpoints require JWT Bearer authentication.
+    Beneficiary account numbers are masked (last 4 digits) in all responses.
+  contact:
+    name: AI Spec Driven Banking Platform
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: schedules
+    description: Transfer schedule lifecycle management
+  - name: executions
+    description: Execution history (read-only)
+
+paths:
+
+  /v1/schedules:
+    get:
+      tags: [schedules]
+      summary: List schedules for the authenticated user
+      description: Returns all schedules grouped by status. Account numbers masked.
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [ACTIVE, PAUSED, EXECUTION_FAILED, COMPLETED, CANCELLED]
+          description: Filter by status (omit for all)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Paginated list of schedules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags: [schedules]
+      summary: Create a recurring transfer schedule
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateScheduleRequest"
+      responses:
+        "201":
+          description: Schedule created; includes all calculated future execution dates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleCreatedResponse"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/BusinessRuleViolation"
+
+  /v1/schedules/{schedule_id}:
+    parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [schedules]
+      summary: Get schedule detail
+      responses:
+        "200":
+          description: Schedule detail with next execution dates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      tags: [schedules]
+      summary: Modify a schedule (amount or end date only)
+      description: |
+        Only `amount` and `end_date` may be modified on an ACTIVE or PAUSED schedule.
+        Modification increments the schedule version. Changes apply from the next
+        pending execution date forward.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModifyScheduleRequest"
+      responses:
+        "200":
+          description: Schedule updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleDetail"
+        "400":
+          $ref: "#/components/responses/ValidationError"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/schedules/{schedule_id}/pause:
+    parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [schedules]
+      summary: Pause an ACTIVE schedule
+      responses:
+        "200":
+          description: Schedule paused
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/schedules/{schedule_id}/resume:
+    parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [schedules]
+      summary: Resume a PAUSED or EXECUTION_FAILED schedule
+      responses:
+        "200":
+          description: Schedule resumed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/schedules/{schedule_id}/cancel:
+    parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [schedules]
+      summary: Cancel a schedule (irreversible)
+      responses:
+        "200":
+          description: Schedule cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScheduleStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/schedules/{schedule_id}/executions:
+    parameters:
+      - name: schedule_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [executions]
+      summary: Get execution history for a schedule
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: Paginated execution history (most recent first)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecutionHistoryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    CreateScheduleRequest:
+      type: object
+      required:
+        - name
+        - source_account_id
+        - beneficiary_id
+        - amount
+        - currency
+        - interval
+        - start_date
+        - end_date
+      properties:
+        name:
+          type: string
+          maxLength: 200
+          example: Monthly Rent
+        source_account_id:
+          type: string
+          format: uuid
+        beneficiary_id:
+          type: string
+          format: uuid
+        amount:
+          type: string
+          pattern: "^\\d+\\.\\d{1,8}$"
+          description: Decimal string to avoid float precision loss
+          example: "1250.00"
+        currency:
+          type: string
+          pattern: "^[A-Z]{3}$"
+          example: EUR
+        interval:
+          type: string
+          enum: [daily, weekly, fortnightly, monthly, quarterly, annually]
+        start_date:
+          type: string
+          format: date
+          description: Must be a future date
+        end_date:
+          type: string
+          format: date
+          description: Must be after start_date
+        jurisdiction:
+          type: string
+          pattern: "^[A-Z]{2}$"
+          default: AT
+          description: ISO 3166-1 alpha-2 for holiday calendar
+        business_day_rule:
+          type: string
+          enum: [next, previous, skip]
+          default: next
+        notify_on_success:
+          type: boolean
+          default: true
+        notify_on_failure:
+          type: boolean
+          default: true
+        notify_advance_hours:
+          type: integer
+          minimum: 1
+          maximum: 168
+          default: 24
+        email_notifications:
+          type: boolean
+          default: true
+
+    ModifyScheduleRequest:
+      type: object
+      minProperties: 1
+      properties:
+        amount:
+          type: string
+          pattern: "^\\d+\\.\\d{1,8}$"
+          example: "1350.00"
+        end_date:
+          type: string
+          format: date
+        notify_on_success:
+          type: boolean
+        notify_on_failure:
+          type: boolean
+        email_notifications:
+          type: boolean
+
+    ScheduleSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, PAUSED, EXECUTION_FAILED, COMPLETED, CANCELLED]
+        amount:
+          type: string
+          description: Decimal string
+        currency:
+          type: string
+        interval:
+          type: string
+        beneficiary_name:
+          type: string
+        beneficiary_account_masked:
+          type: string
+          description: Last 4 digits only, e.g., "****1234"
+        next_execution_date:
+          type: string
+          format: date
+          nullable: true
+        remaining_executions:
+          type: integer
+          nullable: true
+        execution_count:
+          type: integer
+
+    ScheduleDetail:
+      allOf:
+        - $ref: "#/components/schemas/ScheduleSummary"
+        - type: object
+          properties:
+            source_account_id:
+              type: string
+              format: uuid
+            beneficiary_id:
+              type: string
+              format: uuid
+            start_date:
+              type: string
+              format: date
+            end_date:
+              type: string
+              format: date
+            jurisdiction:
+              type: string
+            business_day_rule:
+              type: string
+            version:
+              type: integer
+            upcoming_execution_dates:
+              type: array
+              items:
+                type: string
+                format: date
+              description: Next 5 scheduled execution dates (business-day adjusted)
+            delegated_jwt_expires_at:
+              type: string
+              format: date-time
+              description: When the delegated identity credential expires
+            notify_on_success:
+              type: boolean
+            notify_on_failure:
+              type: boolean
+            notify_advance_hours:
+              type: integer
+            email_notifications:
+              type: boolean
+            created_at:
+              type: string
+              format: date-time
+            updated_at:
+              type: string
+              format: date-time
+
+    ScheduleListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduleSummary"
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        active_schedule_count:
+          type: integer
+          description: Count of ACTIVE+PAUSED schedules (for limit display)
+        limit:
+          type: integer
+          description: Per-user schedule limit (default 20)
+
+    ScheduleCreatedResponse:
+      type: object
+      properties:
+        schedule:
+          $ref: "#/components/schemas/ScheduleDetail"
+        all_execution_dates:
+          type: array
+          items:
+            type: string
+            format: date
+          description: All calculated execution dates for this schedule (business-day adjusted)
+
+    ScheduleStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+        updated_at:
+          type: string
+          format: date-time
+
+    ExecutionRecord:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        occurrence_date:
+          type: string
+          format: date
+        execution_date:
+          type: string
+          format: date
+        status:
+          type: string
+          enum: [PENDING, SUCCEEDED, FAILED, SKIPPED]
+        amount:
+          type: string
+        currency:
+          type: string
+        transfer_id:
+          type: string
+          format: uuid
+          nullable: true
+        failure_reason:
+          type: string
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    ExecutionHistoryResponse:
+      type: object
+      properties:
+        schedule_id:
+          type: string
+          format: uuid
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExecutionRecord"
+        total:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        detail:
+          type: string
+        request_id:
+          type: string
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid JWT
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Schedule not found or not owned by caller
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Request body fails schema validation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BusinessRuleViolation:
+      description: Request violates a business rule (e.g., limit reached, invalid dates)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Invalid state transition (e.g., pausing a COMPLETED schedule)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
