@@ -41,6 +41,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS: "--allow-all-tools"
         run: |
           specify workflow run ${{ inputs.workflow_id }} \
             -i spec="${{ inputs.spec }}" \
