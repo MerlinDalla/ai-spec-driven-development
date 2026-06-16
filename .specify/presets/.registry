@@ -14,6 +14,18 @@
         "speckit-tasks"
       ],
       "installed_at": "2026-06-16T09:43:56.790945+00:00"
+    },
+    "my-preset": {
+      "version": "1.0.0",
+      "source": "local",
+      "manifest_hash": "sha256:e9649145cc6142962abffdbbf6c7e804fbfca3f186f5dfce9cdcccec4b2dcc28",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {},
+      "registered_skills": [
+        "speckit-specify"
+      ],
+      "installed_at": "2026-06-16T12:08:39.056672+00:00"
     }
   }
 }

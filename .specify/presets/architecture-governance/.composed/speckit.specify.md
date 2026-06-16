@@ -1,14 +1,5 @@
 ---
-description: Create or update the feature specification from a natural language feature
-  description.
-handoffs:
-- label: Build Technical Plan
-  agent: speckit.plan
-  prompt: Create a plan for the spec. I am building with...
-- label: Clarify Spec Requirements
-  agent: speckit.clarify
-  prompt: Clarify specification requirements
-  send: true
+description: Adds a UI mockup to the specification
 ---
 
 Before continuing, apply the Architecture Governance preset:
@@ -350,4 +341,14 @@ Success criteria must be:
 - [ ] Specification written to `SPEC_FILE` and validated against quality checklist
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with feature directory, spec file path, and checklist results
+
+
+
+## UI Mockup 
+
+After spec.md is finished prepare a UI mockup for this feature in the mockup.html file 
+- Use Tailwind with simple HTML and JS
+- Mockup must visualise the functionality and layout of elements
+- Use the Raiffeisen Bank desing style 
+
 

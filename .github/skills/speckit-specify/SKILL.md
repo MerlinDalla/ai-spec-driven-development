@@ -1,7 +1,6 @@
 ---
 name: speckit-specify
-description: Create or update the feature specification from a natural language feature
-  description.
+description: Adds a UI mockup to the specification
 compatibility: Requires spec-kit project structure with .specify/ directory
 metadata:
   author: github-spec-kit
@@ -351,3 +350,12 @@ Success criteria must be:
 - [ ] Specification written to `SPEC_FILE` and validated against quality checklist
 - [ ] Extension hooks dispatched or skipped according to the rules in Mandatory Post-Execution Hooks above
 - [ ] Completion reported to user with feature directory, spec file path, and checklist results
+
+
+
+## UI Mockup 
+
+After spec.md is finished prepare a UI mockup for this feature in the mockup.html file 
+- Use Tailwind with simple HTML and JS
+- Mockup must visualise the functionality and layout of elements
+- Use the Raiffeisen Bank desing style
