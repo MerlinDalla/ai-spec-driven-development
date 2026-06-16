@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "presets": {
+    "architecture-governance": {
+      "version": "0.2.0",
+      "source": "local",
+      "manifest_hash": "sha256:e3f142100588f477940de2259a0a256d087262d3f4376e76f78111e135f1553f",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {},
+      "registered_skills": [
+        "speckit-specify",
+        "speckit-plan",
+        "speckit-tasks"
+      ],
+      "installed_at": "2026-06-16T09:43:56.790945+00:00"
+    }
+  }
+}
