@@ -96,9 +96,12 @@ modified enum vocabulary: `OperationType` in `audit_log`.
 - [x] Idempotency — unchanged; X-Idempotency-Key required for transfer mutations
 
 **Performance & Scalability**:
-- [x] Performance targets — <500 ms p95 read, <2 s p95 write
+- [x] Performance targets — <500 ms p95 read (PERF-001), <2 s p95 write (PERF-002), <10 s p95 refresh (PERF-004); per-request 5 s provider timeout with 2-retry backoff (PERF-005)
+- [x] PERF-004 measurement bounds — start: refresh triggered; end: rates committed to DB snapshot and available for reads; error rate ≤1%
+- [x] PERF-005 fallback SLA — cached-rate serve MUST complete within PERF-001 budget (≤500ms p95); retry: 2× with 500ms/2× exponential backoff before fallback; timeout configurable via FX_PROVIDER_TIMEOUT_SECONDS
+- [x] Concurrent refresh deduplication — concurrent scheduled + on-demand refresh deduplicated to single in-flight provider call (PERF-004)
+- [x] Load test gate — 2-min ramp + 10-min sustained at 500 sessions; production-equivalent staging: same CPU/mem tier, ≥10k DB records, network latency within 10% of prod; CI/CD automated enforcement; manual override requires TL sign-off (PERF-006)
 - [x] DB optimization — index on fx_rate_snapshot(effective_at); index on notifications(recipient_account_number, read_at)
-- [x] Load testing — existing Locust scenarios extended for cross-currency flows
 - [x] Resource monitoring — add fx_rate_age_seconds gauge, fx_rate_refresh_total counter, transfer_status_total counter
 
 **Observability & Monitoring**:

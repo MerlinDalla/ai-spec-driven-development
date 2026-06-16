@@ -20,7 +20,7 @@
 
 **Purpose**: Extend the existing `fund_transfer` service with new configuration, exceptions, and module skeletons.
 
-- [ ] T001 Add new settings to `src/fund_transfer/core/config.py`: `FX_PROVIDER_URL`, `FX_RATE_MAX_AGE_MINUTES` (default 60), `FX_RATE_DEVIATION_THRESHOLD_PCT` (default 1), `FX_REFRESH_INTERVAL_SECONDS` (default 3600), `USE_STATIC_RATES` (bool, default False for local dev fallback)
+- [ ] T001 Add new settings to `src/fund_transfer/core/config.py`: `FX_PROVIDER_URL`, `FX_RATE_MAX_AGE_MINUTES` (default 60), `FX_RATE_DEVIATION_THRESHOLD_PCT` (default 1), `FX_REFRESH_INTERVAL_SECONDS` (default 3600), `FX_PROVIDER_TIMEOUT_SECONDS` (default 5, per-request timeout for outbound FX provider calls per PERF-005), `USE_STATIC_RATES` (bool, default False for local dev fallback)
 - [ ] T002 [P] Add new domain exceptions to `src/fund_transfer/core/exceptions.py`: `StaleRateError` (HTTP 503), `RateDeviationError` (HTTP 409, includes preview_rate/current_rate/deviation_pct/new_snapshot_id), `UnsupportedCurrencyPairError` (HTTP 422)
 - [ ] T003 [P] Create empty module files: `src/fund_transfer/services/fx_rate_provider.py`, `src/fund_transfer/services/fx_rate_service.py`, `src/fund_transfer/services/cross_currency_transfer_service.py`, `src/fund_transfer/services/notification_service.py`, `src/fund_transfer/repositories/fx_rate_repository.py`, `src/fund_transfer/repositories/notification_repository.py`, `src/fund_transfer/schemas/fx.py`, `src/fund_transfer/schemas/notification.py`, `src/fund_transfer/api/v1/fx.py`, `src/fund_transfer/api/v1/notifications.py`
 
@@ -41,7 +41,7 @@
 - [ ] T010 Import new models in `alembic/env.py` so Alembic detects them: `FxRateSnapshot`, `CurrencyPair`, `Notification`
 - [ ] T011 Define `RateSnapshot` frozen dataclass and `FxRateProvider` Protocol (with `@runtime_checkable`) in `src/fund_transfer/services/fx_rate_provider.py`: async methods `get_rate(from_currency, to_currency) -> Decimal`, `get_snapshot() -> RateSnapshot`, `is_stale() -> bool`, `refresh() -> None`; sync method `validate_currency(code) -> None`
 - [ ] T012 [P] Implement `StaticFxRateProvider` in `src/fund_transfer/services/fx_rate_provider.py`: wraps existing `ExchangeRateConfig`; `is_stale()` always returns `False`; `refresh()` is a no-op; satisfies `FxRateProvider` Protocol without inheriting from it
-- [ ] T013 [P] Implement `TreasuryFeedAdapter` in `src/fund_transfer/services/fx_rate_provider.py`: async `httpx.AsyncClient` with 5 s connect timeout, 15 s read timeout; 2 retries with exponential backoff; `asyncio.Lock` to prevent thundering herd on concurrent refresh; marks snapshot stale after 3 consecutive failures; parses JSON response into `RateSnapshot`
+- [ ] T013 [P] Implement `TreasuryFeedAdapter` in `src/fund_transfer/services/fx_rate_provider.py`: async `httpx.AsyncClient` using per-request connect and read timeout from `settings.FX_PROVIDER_TIMEOUT_SECONDS`; 2 retries with exponential backoff (initial delay 500ms, factor 2×) before falling back to cached rates; `asyncio.Lock` to prevent thundering herd and deduplicate concurrent scheduled+on-demand refreshes into a single in-flight provider call (PERF-004); marks snapshot stale after 3 consecutive failures; parses JSON response into `RateSnapshot`
 - [ ] T014 Wire `FxRateProvider` into FastAPI lifespan in `src/fund_transfer/main.py`: instantiate `TreasuryFeedAdapter` (or `StaticFxRateProvider` if `USE_STATIC_RATES=True`) at startup; call `await provider.refresh()`; assign to `app.state.fx_provider`; launch `asyncio.create_task` background loop that refreshes every `FX_REFRESH_INTERVAL_SECONDS`; add `get_fx_provider(request: Request) -> FxRateProvider` FastAPI dependency
 - [ ] T015 [P] Implement `FxRateRepository` in `src/fund_transfer/repositories/fx_rate_repository.py`: `get_latest_snapshot(session) -> FxRateSnapshot | None`; `insert_snapshot(session, rates_dict, provider_source) -> FxRateSnapshot`; `mark_stale(session, snapshot_id) -> None`; `get_active_currency_pairs(session) -> list[CurrencyPair]`; all methods use `async with session` pattern consistent with existing repositories
 - [ ] T016 [P] Implement `NotificationRepository` in `src/fund_transfer/repositories/notification_repository.py`: `create_notifications(session, sender_notif, recipient_notif) -> None` (flush inside caller's session.begin()); `list_for_user(session, user_id, unread_only) -> list[Notification]`; `mark_read(session, notification_id, user_id) -> Notification`; enforces owner check in `mark_read`
@@ -132,10 +132,11 @@
 - [ ] T042 [P] Add Prometheus metrics to FX operations: `fx_rate_age_seconds` Gauge (seconds since last successful snapshot), `fx_rate_refresh_total` Counter with labels `{result: success|failure}`, `cross_currency_transfer_status_total` Counter with labels `{status: completed|failed}` — add to `src/fund_transfer/api/v1/fx.py` and `cross_currency_transfer_service.py`
 - [ ] T043 [P] Add OpenTelemetry spans to `src/fund_transfer/services/fx_rate_provider.py`: span on `TreasuryFeedAdapter.refresh()` with attributes `provider_url`, `duration_ms`, `is_stale`; add span to transfer state transitions in `cross_currency_transfer_service.py` with attributes `transfer_id`, `from_status`, `to_status`
 - [ ] T044 [P] Add structured log events via structlog for all new state-changing operations in `fx_rate_service.py`, `cross_currency_transfer_service.py`, `notification_service.py`: include `correlation_id` (from `X-Request-ID` middleware), `transfer_id` or `snapshot_id`, and outcome; mask account balances beyond last 4 digits in log output
-- [ ] T045 [P] Update `docker-compose.yml` and `.env.example` with new environment variables: `FX_PROVIDER_URL`, `FX_RATE_MAX_AGE_MINUTES`, `FX_RATE_DEVIATION_THRESHOLD_PCT`, `FX_REFRESH_INTERVAL_SECONDS`, `USE_STATIC_RATES`
+- [ ] T045 [P] Update `docker-compose.yml` and `.env.example` with new environment variables: `FX_PROVIDER_URL`, `FX_RATE_MAX_AGE_MINUTES`, `FX_RATE_DEVIATION_THRESHOLD_PCT`, `FX_REFRESH_INTERVAL_SECONDS`, `FX_PROVIDER_TIMEOUT_SECONDS`, `USE_STATIC_RATES`
 - [ ] T046 Seed `currency_pairs` table with initial supported pairs (EUR/USD, USD/EUR, EUR/GBP, GBP/EUR, etc.) matching `config/exchange_rates.yaml` — add to a data migration or startup seeding in `src/fund_transfer/main.py` lifespan
 - [ ] T047 Run all quickstart.md validation scenarios end-to-end against running service: Scenarios 1–8; document any failures and fix before closing
 - [ ] T048 Run full test suite with coverage report; verify unit coverage >95% for FX math and fee calculations; overall >80%; fix any gaps: `pytest --cov=src/fund_transfer --cov-report=term-missing`
+- [ ] T049 Execute PERF-006 load test: run Locust scenario with 2-minute linear ramp from 0 to 500 concurrent transfer sessions, then sustained for 10 minutes, against a production-equivalent staging environment (same CPU/memory tier, ≥10,000 DB records, network latency within 10% of prod); verify all p95 targets (PERF-001 ≤500ms, PERF-002 ≤2s, PERF-004 ≤10s), error rates (PERF-001 ≤0.1%, PERF-002 ≤0.5%), and explicit HTTP 503 rejection for new transfer initiations beyond 500 concurrent sessions; block merge if any criterion fails — add results to CI/CD pipeline step in `.github/workflows/` or equivalent
 
 ---
 
@@ -176,6 +177,7 @@
 - T034–T036 all parallel (US3 tests)
 - T037 parallel with tests (US3 — schema file)
 - T042–T045 all parallel (Phase 6 — different concerns)
+- T047–T049 sequential (validate → test coverage → load test gate)
 
 ---
 
