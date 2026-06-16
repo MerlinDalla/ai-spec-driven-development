@@ -41,13 +41,18 @@ jobs:
       - name: Set allow-all-tools flag
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
 
+      - name: Setup workflow directory
+        run: |
+          mkdir -p tests/workflow
+          cp -r .specify/workflows/* tests/workflow/
+
       - name: Run Spec-Kit Workflow
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS: "--allow-all-tools"
         run: |
-          specify workflow run speckit -i spec="${{ inputs.spec }}" --workflows-dir .specify/workflows
+          specify workflow run speckit -i spec="${{ inputs.spec }}"
 
       - name: Upload generated specs as artifact
         if: always()
