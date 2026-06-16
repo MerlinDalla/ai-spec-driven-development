@@ -47,7 +47,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS: "--allow-all-tools"
         run: |
-          specify workflow run speckit -i spec="${{ inputs.spec }}"
+          specify workflow run speckit -i spec="${{ inputs.spec }}" --workflows-dir .specify/workflows
 
       - name: Upload generated specs as artifact
         if: always()
