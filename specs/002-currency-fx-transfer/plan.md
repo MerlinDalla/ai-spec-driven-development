@@ -1,4 +1,4 @@
-﻿# Implementation Plan: Currency Conversion & Cross-Currency Transfer
+# Implementation Plan: Currency Conversion & Cross-Currency Transfer
 
 **Branch**: `002-currency-fx-transfer` | **Date**: 2026-06-15 | **Spec**: [spec.md](./spec.md)
 
@@ -158,9 +158,9 @@ src/fund_transfer/
 │   └── notification.py                  # NEW: NotificationResponse
 ├── services/
 │   ├── fx_rate_service.py               # NEW: dynamic rate service (staleness, refresh, deviation check)
-│   ├── fx_rate_provider.py              # NEW: FxRateProvider protocol + HttpFxRateProvider + StaticFxRateProvider
+│   ├── fx_rate_provider.py              # NEW: FxRateProvider protocol + TreasuryFeedAdapter + StaticFxRateProvider
 │   ├── notification_service.py          # NEW: create and deliver in-app notifications
-│   ├── transfer_service.py              # MODIFIED: state machine, split fees, rate deviation, pessimistic lock
+│   ├── cross_currency_transfer_service.py # NEW: cross-currency state machine, split fees, rate deviation, pessimistic lock
 │   └── exchange_rate_service.py         # KEPT UNCHANGED (backward compat for same-currency transfers)
 
 alembic/versions/
