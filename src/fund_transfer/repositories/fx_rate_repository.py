@@ -16,7 +16,7 @@ class FxRateRepository:
     async def get_latest_snapshot(self) -> FxRateSnapshot | None:
         result = await self._session.execute(
             select(FxRateSnapshot)
-            .where(FxRateSnapshot.is_stale == False)
+            .where(FxRateSnapshot.is_stale.is_(False))
             .order_by(FxRateSnapshot.effective_at.desc())
             .limit(1)
         )
@@ -43,5 +43,5 @@ class FxRateRepository:
         await self._session.flush()
 
     async def get_active_currency_pairs(self) -> list[CurrencyPair]:
-        result = await self._session.execute(select(CurrencyPair).where(CurrencyPair.is_active == True))
+        result = await self._session.execute(select(CurrencyPair).where(CurrencyPair.is_active.is_(True)))
         return list(result.scalars().all())

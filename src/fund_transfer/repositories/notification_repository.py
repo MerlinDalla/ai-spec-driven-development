@@ -21,7 +21,7 @@ class NotificationRepository:
     async def list_for_account(self, account_number: str, unread_only: bool = False) -> list[Notification]:
         query = select(Notification).where(Notification.recipient_account_number == account_number)
         if unread_only:
-            query = query.where(Notification.read_at == None)
+            query = query.where(Notification.read_at.is_(None))
         query = query.order_by(Notification.created_at.desc())
         result = await self._session.execute(query)
         return list(result.scalars().all())
@@ -30,7 +30,7 @@ class NotificationRepository:
         result = await self._session.execute(
             select(func.count()).select_from(Notification).where(
                 Notification.recipient_account_number == account_number,
-                Notification.read_at == None,
+                Notification.read_at.is_(None),
             )
         )
         return result.scalar_one()
