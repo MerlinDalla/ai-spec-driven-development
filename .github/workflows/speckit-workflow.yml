@@ -31,9 +31,6 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install specify CLI
-        run: npm install -g @github/specify@latest
-
       - name: Set allow-all-tools flag
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
 
@@ -43,9 +40,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS: "--allow-all-tools"
         run: |
-          specify workflow run ${{ inputs.workflow_id }} \
-            -i spec="${{ inputs.spec }}" \
-            --non-interactive
+          gh copilot workflow run speckit -i spec="${{ inputs.spec }}" --non-interactive
 
       - name: Upload generated specs as artifact
         if: always()
