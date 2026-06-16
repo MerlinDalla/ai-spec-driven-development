@@ -33,7 +33,10 @@ jobs:
 
       - name: Install specify CLI
         run: |
-          curl -fsSL https://get.spec-kit.dev/install.sh | bash
+          npm install -g specify
+
+      - name: Verify specify installation
+        run: specify --version
 
       - name: Set allow-all-tools flag
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
