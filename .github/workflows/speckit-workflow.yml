@@ -31,11 +31,6 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install Copilot CLI extension
-        run: gh extension install github/gh-copilot --force
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Install specify CLI
         run: npm install -g @github/specify@latest
 
@@ -44,6 +39,7 @@ jobs:
 
       - name: Run Spec-Kit Workflow
         env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           specify workflow run ${{ inputs.workflow_id }} \
