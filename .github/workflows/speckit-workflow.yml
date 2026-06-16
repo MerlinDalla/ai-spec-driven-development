@@ -31,17 +31,13 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install Copilot CLI
-        run: npm install -g @github/copilot-cli@latest
+      - name: Install Copilot CLI extension
+        run: gh extension install github/gh-copilot --force
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install specify CLI
         run: npm install -g @github/specify@latest
-
-      - name: Authenticate Copilot CLI
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "$GITHUB_TOKEN" | copilot auth login --with-token
 
       - name: Set allow-all-tools flag
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
