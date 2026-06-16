@@ -43,8 +43,8 @@ jobs:
 
       - name: Run Spec-Kit Workflow
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS: "--allow-all-tools"
         run: |
           specify workflow run speckit -i spec="${{ inputs.spec }}" --workflows-dir .specify/workflows
