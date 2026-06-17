@@ -37,6 +37,7 @@ jobs:
           # Trim whitespace and convert to JSON array
           JSON_ARRAY="["
           FIRST=1
+          FOUND_ANY=0
           for service in $(echo $SERVICES | tr ',' ' '); do
             service=$(echo $service | xargs)  # trim whitespace
             # Convert hyphens to underscores for directory lookup
@@ -46,12 +47,18 @@ jobs:
               if [ $FIRST -eq 0 ]; then JSON_ARRAY="$JSON_ARRAY,"; fi
               JSON_ARRAY="$JSON_ARRAY\"$service\""
               FIRST=0
+              FOUND_ANY=1
             else
-              echo "  ❌ $service not found (looked for src/$service_dir)"
-              exit 1
+              echo "  ⚠️  $service not found (looked for src/$service_dir) - skipping"
             fi
           done
           JSON_ARRAY="$JSON_ARRAY]"
+          
+          if [ $FOUND_ANY -eq 0 ]; then
+            echo "❌ ERROR: No valid services found!"
+            exit 1
+          fi
+          
           echo "json=$JSON_ARRAY" >> $GITHUB_OUTPUT
 
   orchestrate-specs:
