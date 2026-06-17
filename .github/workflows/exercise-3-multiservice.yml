@@ -39,13 +39,15 @@ jobs:
           FIRST=1
           for service in $(echo $SERVICES | tr ',' ' '); do
             service=$(echo $service | xargs)  # trim whitespace
-            if [ -d "src/$service" ]; then
-              echo "  ✅ $service found"
+            # Convert hyphens to underscores for directory lookup
+            service_dir=$(echo "$service" | sed 's/-/_/g')
+            if [ -d "src/$service_dir" ]; then
+              echo "  ✅ $service found (maps to src/$service_dir)"
               if [ $FIRST -eq 0 ]; then JSON_ARRAY="$JSON_ARRAY,"; fi
               JSON_ARRAY="$JSON_ARRAY\"$service\""
               FIRST=0
             else
-              echo "  ❌ $service not found"
+              echo "  ❌ $service not found (looked for src/$service_dir)"
               exit 1
             fi
           done
