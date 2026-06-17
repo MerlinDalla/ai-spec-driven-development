@@ -255,19 +255,6 @@ specify workflow run speckit -i spec="Your feature description"
 # 6. Start implementation
 ```
 
----
-
-## 📖 Training Materials
-
-See `public/07-workflow/` for complete training slides:
-
-- **Slide 1-3:** Overview & architecture
-- **Slide 4:** Exercise 1 — Built-in pipeline
-- **Slide 5-7:** Exercise 1 execution flow
-- **Slide 8:** Exercise 2 — Enterprise pipeline (fan-out, MCP, remediation)
-- **Slide 9-15:** Exercise 2 detailed walkthrough
-
----
 
 ## ✅ Verification Checklist
 
@@ -296,29 +283,6 @@ See `public/07-workflow/` for complete training slides:
 
 ---
 
-## 🚀 Next Steps
-
-### 1. Run Both Exercises
-- [ ] Complete Exercise 1 with simple feature
-- [ ] Complete Exercise 2 with security feature
-- [ ] Review generated artifacts
-
-### 2. Customize for Your Project
-- [ ] Modify `.specify/workflows/speckit/workflow.yml` for your conventions
-- [ ] Add custom agents in `.github/agents/`
-- [ ] Configure agent memory & context
-
-### 3. Integration with CI/CD
-- [ ] Exercise 3: Multi-service orchestration (coming)
-- [ ] Dependency management workflow (coming)
-- [ ] Release & deployment pipeline (coming)
-
-### 4. Scale to Production
-- [ ] Set up team charters & agent roles
-- [ ] Configure per-environment secrets
-- [ ] Implement approval gates for sensitive changes
-
----
 
 ## 🐛 Troubleshooting
 
@@ -367,18 +331,5 @@ MIT — See LICENSE file
 
 ---
 
-## 🤝 Contributing
 
-Feedback & contributions welcome! 
 
-1. Fork repository
-2. Create feature branch: `git checkout -b feature/your-feature`
-3. Commit changes: `git commit -m "Add your feature"`
-4. Push: `git push origin feature/your-feature`
-5. Create Pull Request
-
----
-
-**Last Updated:** June 17, 2026  
-**Version:** 1.0.0 (Exercises 1 & 2)  
-**Status:** Production Ready ✅
