@@ -16,6 +16,8 @@ jobs:
   setup:
     name: Setup · Validate Services
     runs-on: ubuntu-latest
+    outputs:
+      services-json: ${{ steps.parse-services.outputs.json }}
     steps:
       - uses: actions/checkout@v4
 
@@ -27,18 +29,28 @@ jobs:
       - name: Install specify CLI
         run: npm install -g specify
 
-      - name: Validate services
+      - name: Parse and validate services
+        id: parse-services
         run: |
-          echo "📋 Validating services..."
+          echo "📋 Validating and parsing services..."
           SERVICES="${{ inputs.services }}"
+          # Trim whitespace and convert to JSON array
+          JSON_ARRAY="["
+          FIRST=1
           for service in $(echo $SERVICES | tr ',' ' '); do
+            service=$(echo $service | xargs)  # trim whitespace
             if [ -d "src/$service" ]; then
               echo "  ✅ $service found"
+              if [ $FIRST -eq 0 ]; then JSON_ARRAY="$JSON_ARRAY,"; fi
+              JSON_ARRAY="$JSON_ARRAY\"$service\""
+              FIRST=0
             else
               echo "  ❌ $service not found"
               exit 1
             fi
           done
+          JSON_ARRAY="$JSON_ARRAY]"
+          echo "json=$JSON_ARRAY" >> $GITHUB_OUTPUT
 
   orchestrate-specs:
     name: PHASE 1 · Generate Specs for All Services
@@ -46,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJson(format('[{0}]', format('"{0}"', replace(inputs.services, ',', '","')))) }}
+        service: ${{ fromJson(needs.setup.outputs.services-json) }}
     steps:
       - uses: actions/checkout@v4
 
@@ -107,11 +119,11 @@ jobs:
 
   generate-plans:
     name: PHASE 3 · Generate Plans for All Services
-    needs: validate-specs
+    needs: [setup, validate-specs]
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        service: ${{ fromJson(format('[{0}]', format('"{0}"', replace(inputs.services, ',', '","')))) }}
+        service: ${{ fromJson(needs.setup.outputs.services-json) }}
     steps:
       - uses: actions/checkout@v4
 
