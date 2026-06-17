@@ -43,8 +43,9 @@ jobs:
 
       - name: Setup workflow directory
         run: |
-          mkdir -p tests
+          mkdir -p tests/workflow tests/run
           cp -r .specify tests/.specify
+          cp -r .specify/workflows/* tests/workflow/
 
       - name: Run Spec-Kit Workflow
         env:
