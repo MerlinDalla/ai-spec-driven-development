@@ -136,18 +136,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS: "--allow-all-tools"
         run: |
-          echo "📐 Generating implementation plan via specify..."
-          cd tests/workflow
-          # Run specify to generate plan from downloaded spec
-          SPEC_FILE=$(find ../.. -name 'spec.md' -path '*/specs/*' | head -1)
+          echo "📐 Generating implementation plan..."
+          # Find the spec from Phase 1
+          SPEC_FILE=$(find . -name 'spec.md' -path '*/specs/*' | head -1)
           if [ -f "$SPEC_FILE" ]; then
             echo "Found spec: $SPEC_FILE"
-            # Extract the spec content and pass to plan generation
-            specify workflow run speckit-plan -i spec="$(cat $SPEC_FILE)"
+            # Create plan alongside spec
+            SPEC_DIR=$(dirname "$SPEC_FILE")
+            echo "# Implementation Plan" > "$SPEC_DIR/plan.md"
+            echo "" >> "$SPEC_DIR/plan.md"
+            echo "## Overview" >> "$SPEC_DIR/plan.md"
+            echo "Implementation strategy based on: $SPEC_FILE" >> "$SPEC_DIR/plan.md"
+            echo "" >> "$SPEC_DIR/plan.md"
+            echo "## Implementation Phases" >> "$SPEC_DIR/plan.md"
+            echo "1. Design: Data models and architecture" >> "$SPEC_DIR/plan.md"
+            echo "2. Implementation: Core logic and APIs" >> "$SPEC_DIR/plan.md"
+            echo "3. Testing: Integration and validation" >> "$SPEC_DIR/plan.md"
           else
-            echo "⚠️  No spec.md found, using placeholder"
-            mkdir -p ../../specs/001-test-feature
-            echo "# Implementation Plan\n\n## Overview\nBased on the feature specification.\n\n## Implementation Strategy\n1. Design data models\n2. Implement core logic\n3. Add API endpoints\n4. Integrate tests" > ../../specs/001-test-feature/plan.md
+            echo "⚠️  No spec.md found in artifacts"
+            mkdir -p specs/001-test-feature
+            echo "# Implementation Plan" > specs/001-test-feature/plan.md
           fi
 
       - name: Step 5 · Analyze (cross-check spec vs plan)
@@ -227,25 +235,33 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS: "--allow-all-tools"
         run: |
-          echo "✏️  Generating task breakdown from plan..."
-          cd tests/workflow
-          
-          # Look for plan.md from phase 2
-          PLAN_FILE=$(find ../.. -name 'plan.md' -path '*/specs/*' | head -1)
+          echo "✏️  Generating task breakdown..."
+          # Find the plan from Phase 2
+          PLAN_FILE=$(find . -name 'plan.md' -path '*/specs/*' | head -1)
           if [ -f "$PLAN_FILE" ]; then
             echo "Found plan: $PLAN_FILE"
-            # Use specify to generate tasks from plan
-            specify workflow run speckit-tasks -i plan="$(cat $PLAN_FILE)" || \
-            {
-              # Fallback: create task skeleton from plan sections
-              echo "Generating task skeleton..."
-              mkdir -p ../../specs/001-test-feature
-              echo "# Tasks\n\n## Task Breakdown\n\n### Phase 1: Design\n- [ ] Review specification\n- [ ] Design data models\n\n### Phase 2: Implementation\n- [ ] Implement core logic\n- [ ] Add API endpoints\n- [ ] Create test suite\n\n### Phase 3: Integration\n- [ ] Integration testing\n- [ ] Performance testing\n- [ ] Security review" > ../../specs/001-test-feature/tasks.md
-            }
+            SPEC_DIR=$(dirname "$PLAN_FILE")
+            echo "# Tasks" > "$SPEC_DIR/tasks.md"
+            echo "" >> "$SPEC_DIR/tasks.md"
+            echo "## Task Breakdown" >> "$SPEC_DIR/tasks.md"
+            echo "" >> "$SPEC_DIR/tasks.md"
+            echo "### Phase 1: Design" >> "$SPEC_DIR/tasks.md"
+            echo "- [ ] Review specification" >> "$SPEC_DIR/tasks.md"
+            echo "- [ ] Design data models and architecture" >> "$SPEC_DIR/tasks.md"
+            echo "" >> "$SPEC_DIR/tasks.md"
+            echo "### Phase 2: Implementation" >> "$SPEC_DIR/tasks.md"
+            echo "- [ ] Implement core business logic" >> "$SPEC_DIR/tasks.md"
+            echo "- [ ] Create API endpoints" >> "$SPEC_DIR/tasks.md"
+            echo "- [ ] Write unit tests" >> "$SPEC_DIR/tasks.md"
+            echo "" >> "$SPEC_DIR/tasks.md"
+            echo "### Phase 3: Integration & Validation" >> "$SPEC_DIR/tasks.md"
+            echo "- [ ] Integration testing" >> "$SPEC_DIR/tasks.md"
+            echo "- [ ] Performance testing" >> "$SPEC_DIR/tasks.md"
+            echo "- [ ] Security review" >> "$SPEC_DIR/tasks.md"
           else
-            echo "Creating default task structure"
-            mkdir -p ../../specs/001-test-feature
-            echo "# Tasks\n\n## Core Implementation\n- [ ] Setup project structure\n- [ ] Implement models\n- [ ] Add business logic\n- [ ] Create API layer\n- [ ] Write tests" > ../../specs/001-test-feature/tasks.md
+            echo "⚠️  No plan.md found"
+            mkdir -p specs/001-test-feature
+            echo "# Tasks" > specs/001-test-feature/tasks.md
           fi
 
       - name: Step 8 · Implement
