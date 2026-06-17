@@ -96,7 +96,7 @@ source venv/bin/activate
 venv\Scripts\activate
 
 # Install dependencies
-pip install -r pyproject.toml
+pip install -e .
 ```
 
 ### Step 4: Setup Database (Optional)
@@ -370,7 +370,7 @@ source venv/bin/activate  # macOS/Linux
 venv\Scripts\activate     # Windows
 
 # Reinstall dependencies
-pip install -r pyproject.toml
+pip install -e .
 
 # Verify installed
 pip list | grep fastapi
@@ -389,7 +389,7 @@ pip list | grep fastapi
 - [ ] Repository cloned locally
 - [ ] specify CLI installed (`npm install -g specify`)
 - [ ] Python virtual environment created and activated
-- [ ] Dependencies installed (`pip install -r pyproject.toml`)
+- [ ] Dependencies installed (`pip install -e .`)
 - [ ] Database setup completed (if needed)
 - [ ] `.env.local` file created with environment variables
 - [ ] All tools verified (node, python, git, gh, specify)

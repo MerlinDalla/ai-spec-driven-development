@@ -233,7 +233,7 @@ specify --version  # Should show 0.9.5+
 # Setup Python environment
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
-pip install -r pyproject.toml
+pip install -e .
 
 # Setup database (optional, for local testing)
 docker-compose up -d
