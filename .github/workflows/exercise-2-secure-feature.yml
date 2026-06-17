@@ -32,7 +32,7 @@ jobs:
           cp -r .specify tests/.specify
           cp -r .specify/workflows/* tests/workflow/
 
-  # Phase 1: SPEC with fan-out reviews (security + edge cases)
+
   phase1-spec:
     name: PHASE 1 · Spec with Fan-Out Reviews
     needs: setup
@@ -158,7 +158,6 @@ jobs:
           path: specs/
           if-no-files-found: warn
 
-  # Phase 3: BUILD, AUDIT, & REMEDIATE
   phase3-build:
     name: PHASE 3 · Build, Dep Audit, & Remediation Loop
     needs: phase2-plan
