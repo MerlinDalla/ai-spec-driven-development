@@ -55,7 +55,7 @@ jobs:
 
       - name: Copy .specify configuration
         run: |
-          mkdir -p tests/workflow tests/run
+          mkdir -p tests/workflow tests/run tests/speckit
           cp -r .specify tests/.specify
           cp -r .specify/workflows/* tests/workflow/
 
@@ -120,7 +120,7 @@ jobs:
 
       - name: Copy .specify configuration
         run: |
-          mkdir -p tests/workflow tests/run
+          mkdir -p tests/workflow tests/run tests/speckit
           cp -r .specify tests/.specify
           cp -r .specify/workflows/* tests/workflow/
 
@@ -181,7 +181,7 @@ jobs:
 
       - name: Copy .specify configuration
         run: |
-          mkdir -p tests/workflow tests/run
+          mkdir -p tests/workflow tests/run tests/speckit
           cp -r .specify tests/.specify
           cp -r .specify/workflows/* tests/workflow/
 
