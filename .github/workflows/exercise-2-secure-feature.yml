@@ -50,6 +50,29 @@ jobs:
       - name: Install specify CLI
         run: npm install -g specify
 
+      - name: "📡 Show Model Configuration"
+        run: |
+          echo "================================"
+          echo "🤖 LLM Model Configuration"
+          echo "================================"
+          echo "Integration: copilot"
+          if [ -f ".specify/init-options.json" ]; then
+            echo ""
+            echo "Configuration (.specify/init-options.json):"
+            cat .specify/init-options.json | grep -E '"(ai|model|integration)"' || echo "  - No explicit model set (using default: gpt-4o)"
+            echo ""
+            echo "Effective Model:"
+            MODEL=$(cat .specify/init-options.json | grep -o '"model":"[^"]*"' || echo "not-set")
+            if [ "$MODEL" = "not-set" ]; then
+              echo "  → GitHub Copilot API (default: gpt-4o via Copilot Business subscription)"
+            else
+              echo "  → $MODEL"
+            fi
+          fi
+          echo ""
+          echo "Note: This workflow runs on GitHub Actions runner"
+          echo "================================"
+
       - name: Set allow-all-tools flag
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
 
@@ -114,6 +137,29 @@ jobs:
 
       - name: Install specify CLI
         run: npm install -g specify
+
+      - name: "📡 Show Model Configuration"
+        run: |
+          echo "================================"
+          echo "🤖 LLM Model Configuration"
+          echo "================================"
+          echo "Integration: copilot"
+          if [ -f ".specify/init-options.json" ]; then
+            echo ""
+            echo "Configuration (.specify/init-options.json):"
+            cat .specify/init-options.json | grep -E '"(ai|model|integration)"' || echo "  - No explicit model set (using default: gpt-4o)"
+            echo ""
+            echo "Effective Model:"
+            MODEL=$(cat .specify/init-options.json | grep -o '"model":"[^"]*"' || echo "not-set")
+            if [ "$MODEL" = "not-set" ]; then
+              echo "  → GitHub Copilot API (default: gpt-4o via Copilot Business subscription)"
+            else
+              echo "  → $MODEL"
+            fi
+          fi
+          echo ""
+          echo "Note: This workflow runs on GitHub Actions runner"
+          echo "================================"
 
       - name: Set allow-all-tools flag
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
@@ -213,6 +259,29 @@ jobs:
 
       - name: Install specify CLI
         run: npm install -g specify
+
+      - name: "📡 Show Model Configuration"
+        run: |
+          echo "================================"
+          echo "🤖 LLM Model Configuration"
+          echo "================================"
+          echo "Integration: copilot"
+          if [ -f ".specify/init-options.json" ]; then
+            echo ""
+            echo "Configuration (.specify/init-options.json):"
+            cat .specify/init-options.json | grep -E '"(ai|model|integration)"' || echo "  - No explicit model set (using default: gpt-4o)"
+            echo ""
+            echo "Effective Model:"
+            MODEL=$(cat .specify/init-options.json | grep -o '"model":"[^"]*"' || echo "not-set")
+            if [ "$MODEL" = "not-set" ]; then
+              echo "  → GitHub Copilot API (default: gpt-4o via Copilot Business subscription)"
+            else
+              echo "  → $MODEL"
+            fi
+          fi
+          echo ""
+          echo "Note: This workflow runs on GitHub Actions runner"
+          echo "================================"
 
       - name: Set allow-all-tools flag
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
