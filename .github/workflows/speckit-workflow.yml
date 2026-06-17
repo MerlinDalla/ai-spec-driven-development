@@ -32,7 +32,6 @@ jobs:
       - name: Verify specify installation
         run: specify --version
 
-      # CRITICAL: Step 0 from training — enable headless agent to write files
       - name: Set allow-all-tools flag (required for headless Copilot)
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
 
@@ -42,11 +41,7 @@ jobs:
           cp -r .specify tests/.specify
           cp -r .specify/workflows/* tests/workflow/
 
-      # Exercise 1 · Slide 4 · Run the built-in pipeline
-      # This will:
-      # - PHASE 1: specify → STOP at gate review-spec
-      # - PHASE 2: plan → STOP at gate review-plan  
-      # - PHASE 3: tasks → implement
+
       - name: Run Spec-Kit Pipeline
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -70,7 +65,6 @@ jobs:
             echo "⚠️  No specs directory found"
           fi
 
-      # Artifact: Download from Actions tab
       - name: Upload workflow artifacts
         if: always()
         uses: actions/upload-artifact@v4
