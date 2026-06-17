@@ -1,4 +1,4 @@
-name: Spec-Kit Pipeline
+name: Exercise 1 · Built-in Spec-Kit Pipeline with Human Gates
 
 on:
   workflow_dispatch:
@@ -7,17 +7,10 @@ on:
         description: "Feature description (plain English)"
         required: true
         type: string
-      workflow_id:
-        description: "Spec-kit workflow to run"
-        required: false
-        default: "speckit"
-        type: choice
-        options:
-          - speckit
 
 jobs:
-  speckit:
-    name: Run Spec-Kit Workflow
+  speckit-pipeline:
+    name: Run Spec-Kit Workflow (specify → review → plan → review → tasks → implement)
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -25,6 +18,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -32,33 +27,57 @@ jobs:
           node-version: "20"
 
       - name: Install specify CLI
-        run: |
-          npm install -g specify
+        run: npm install -g specify
 
       - name: Verify specify installation
         run: specify --version
 
-      - name: Set allow-all-tools flag
+      # CRITICAL: Step 0 from training — enable headless agent to write files
+      - name: Set allow-all-tools flag (required for headless Copilot)
         run: echo "SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS=--allow-all-tools" >> $GITHUB_ENV
 
-      - name: Setup workflow directory
+      - name: Copy .specify configuration to test directory
         run: |
           mkdir -p tests/workflow tests/run
           cp -r .specify tests/.specify
           cp -r .specify/workflows/* tests/workflow/
 
-      - name: Run Spec-Kit Workflow
+      # Exercise 1 · Slide 4 · Run the built-in pipeline
+      # This will:
+      # - PHASE 1: specify → STOP at gate review-spec
+      # - PHASE 2: plan → STOP at gate review-plan  
+      # - PHASE 3: tasks → implement
+      - name: Run Spec-Kit Pipeline
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPECKIT_INTEGRATION_COPILOT_EXTRA_ARGS: "--allow-all-tools"
         run: |
+          echo "🚀 Starting Spec-Kit Pipeline"
+          echo "Feature: ${{ inputs.spec }}"
+          echo ""
           specify workflow run speckit -i spec="${{ inputs.spec }}"
+        continue-on-error: true
 
-      - name: Upload generated specs as artifact
+      - name: Summarize results
+        if: always()
+        run: |
+          echo "## Spec-Kit Pipeline Results"
+          if [ -d "specs/" ]; then
+            echo "✅ Specifications generated"
+            find specs/ -type f -name "*.md" | head -10
+          else
+            echo "⚠️  No specs directory found"
+          fi
+
+      # Artifact: Download from Actions tab
+      - name: Upload workflow artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: speckit-output
-          path: specs/
+          name: speckit-output-${{ github.run_number }}
+          path: |
+            specs/
+            tests/
           if-no-files-found: warn
+          retention-days: 30
