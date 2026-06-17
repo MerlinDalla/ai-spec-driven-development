@@ -160,6 +160,11 @@ jobs:
         with:
           name: distribution-${{ inputs.version }}
 
+      - name: Configure Git
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+
       - name: Create release tag
         run: |
           VERSION="${{ inputs.version }}"
