@@ -93,7 +93,7 @@ jobs:
           echo "Feature: ${{ inputs.feature }} (for ${{ matrix.service }})"
 
       - name: Upload spec artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: spec-${{ matrix.service }}
           path: specs/
@@ -107,7 +107,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download all specs
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           path: specs
 
@@ -137,7 +137,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download spec artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: spec-${{ matrix.service }}
           path: specs
@@ -151,7 +151,7 @@ jobs:
           echo "## Service: ${{ matrix.service }}" >> specs/${{ matrix.service }}/plan.md
 
       - name: Upload plan artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: plan-${{ matrix.service }}
           path: specs/
